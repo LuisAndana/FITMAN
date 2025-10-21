@@ -1,0 +1,144 @@
+/* ====== CONFIGURACIÓN GENERAL ====== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+.container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  background-color: #000; /* Fondo negro global */
+  overflow: hidden;
+}
+
+/* ====== MITAD IZQUIERDA (IMAGEN) ====== */
+.banner {
+  flex: 1;
+  position: relative;
+}
+
+.banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(50%);
+}
+
+.text-overlay {
+  position: absolute;
+  bottom: 50px;
+  left: 50px;
+  color: #fff;
+}
+
+.text-overlay h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.text-overlay h2::before {
+  content: '⚡';
+  color: #ff3b6b; /* ícono rosa */
+  font-size: 1.5rem;
+}
+
+.text-overlay p {
+  margin-top: 8px;
+  line-height: 1.6;
+}
+
+.text-overlay .subtitle {
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.text-overlay .description {
+  color: #c7c7c7;
+  font-size: 0.9rem;
+  max-width: 450px;
+}
+
+/* ====== MITAD DERECHA (LOGO Y BOTONES) ====== */
+.right-panel {
+  flex: 1;
+  background-color: #111;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  text-align: center;
+}
+
+.right-panel h1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.right-panel h1::before {
+  content: '⚡';
+  color: #ff3b6b;
+}
+
+.right-panel h3 {
+  font-weight: 400;
+  color: #cfcfcf;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  margin-bottom: 40px;
+}
+
+/* ====== BOTONES ====== */
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 220px;
+}
+
+.btn {
+  background: transparent;
+  color: white;
+  border: 1.5px solid #fff;
+  border-radius: 6px;
+  padding: 10px 0;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: scale(1.03);
+}
+
+/* Registrar → rosa */
+.btn-register {
+  border-color: #ff3b6b;
+}
+
+.btn-register:hover {
+  background-color: #ff3b6b;
+  color: #fff;
+}
+
+/* Iniciar sesión → gris */
+.btn-login {
+  border-color: #aaa;
+}
+
+.btn-login:hover {
+  background-color: #aaa;
+  color: #111;
+}

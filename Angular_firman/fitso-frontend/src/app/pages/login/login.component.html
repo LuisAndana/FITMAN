@@ -1,0 +1,25 @@
+<div class="login-container">
+  <div class="banner">
+    <img src="assets/banner.jpg" alt="Banner gimnasio" />
+  </div>
+
+  <div class="form-section">
+    <h2>Iniciar sesión</h2>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <label>Correo electrónico</label>
+      <input type="email" formControlName="correo" placeholder="ejemplo@correo.com" />
+
+      <label>Contraseña</label>
+      <input type="password" formControlName="contrasena" placeholder="Tu contraseña" />
+
+      <button type="submit">Ingresar</button>
+    </form>
+
+    <p class="mensaje" *ngIf="mensaje">{{ mensaje }}</p>
+    <p class="registro-link">
+      ¿No tienes cuenta? <a routerLink="/register">Regístrate aquí</a>
+    </p>
+  </div>
+</div>
+
