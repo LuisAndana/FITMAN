@@ -1,0 +1,98 @@
+<div class="page">
+  <!-- Header -->
+  <header class="page-header">
+    <h1 class="page-title">Nutriólogos</h1>
+    <p class="page-sub">Explora profesionales verificados y revisa su perfil.</p>
+  </header>
+
+  <!-- Panel de filtros -->
+  <section class="panel">
+    <div class="panel-title">
+      <span class="dot"></span>
+      <h2>Buscar</h2>
+    </div>
+
+    <div class="filters">
+      <div class="field">
+        <input
+          id="q"
+          [(ngModel)]="q"
+          (keyup.enter)="onSearch()"
+          type="text"
+          placeholder="Buscar por nombre o profesión"
+          class="input"
+          aria-label="Buscar por nombre o profesión"
+        />
+      </div>
+
+      <div class="field select-wrap">
+        <select
+          [(ngModel)]="order"
+          (change)="onSearch()"
+          class="select"
+          aria-label="Ordenar resultados"
+        >
+          <option value="recientes">Más recientes</option>
+          <option value="nombre">Por nombre</option>
+        </select>
+      </div>
+
+      <button class="btn primary" type="button" (click)="onSearch()" [disabled]="loading">
+        🔎 Buscar
+      </button>
+    </div>
+  </section>
+
+  <!-- Estado de carga -->
+  <div *ngIf="loading" class="skeleton-grid">
+    <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6]"></div>
+  </div>
+
+  <!-- Vacío -->
+  <div *ngIf="!loading && items.length === 0" class="empty">
+    <div class="empty-inner">
+      <div class="empty-icon">🗂️</div>
+      <h3>No se encontraron nutriólogos</h3>
+      <p>Prueba con otro nombre, profesión o cambia el orden.</p>
+    </div>
+  </div>
+
+  <!-- Grid de resultados -->
+  <section *ngIf="!loading && items.length" class="grid">
+    <article *ngFor="let n of items" class="card">
+      <div class="card-head">
+        <div class="avatar">
+          {{ (n.nombre || 'N').charAt(0) | uppercase }}
+        </div>
+
+        <div class="meta">
+          <div class="name-row">
+            <h3 class="name">{{ n.nombre || 'Sin nombre' }}</h3>
+            <span *ngIf="n.validado" class="badge">✓ Validado</span>
+          </div>
+          <p class="prof">{{ n.profesion || 'Nutriólogo' }}</p>
+          <p class="muted small">Cédula: {{ n.numero_cedula_mask || '****' }}</p>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <a class="btn ghost" [routerLink]="['/nutriologos', n.id_usuario]">
+          Ver perfil →
+        </a>
+      </div>
+    </article>
+  </section>
+
+  <!-- Paginación -->
+  <footer *ngIf="!loading && totalPages > 1" class="pager">
+    <button class="btn outline" type="button" (click)="prevPage()" [disabled]="page<=1 || loading">
+      ← Anterior
+    </button>
+    <span class="pager-info">
+      Página <strong>{{ page }}</strong> de <strong>{{ totalPages }}</strong>
+    </span>
+    <button class="btn outline" type="button" (click)="nextPage()" [disabled]="page*size >= total || loading">
+      Siguiente →
+    </button>
+  </footer>
+</div>

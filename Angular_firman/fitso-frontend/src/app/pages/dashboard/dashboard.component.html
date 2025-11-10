@@ -1,0 +1,123 @@
+<div class="dashboard-container">
+  <!-- (Header global vive en AppComponent con <app-header>) -->
+
+  <!-- Menú lateral deslizable -->
+  <nav class="sidebar-menu" [class.open]="menuOpen">
+    <div class="menu-close" (click)="toggleMenu()">×</div>
+    <ul class="menu-list">
+      <li>
+        <a [routerLink]="['/dashboard']" routerLinkActive="active" (click)="toggleMenu()">📊 Dashboard</a>
+      </li>
+      <li><a href="#progreso" (click)="toggleMenu()">📈 Mi Progreso</a></li>
+      <li><a href="#rutinas" (click)="toggleMenu()">💪 Mis Rutinas</a></li>
+      <li><a href="#dieta" (click)="toggleMenu()">🍎 Plan de Dieta</a></li>
+      <li><a href="#logros" (click)="toggleMenu()">🏆 Logros</a></li>
+      <li>
+        <a [routerLink]="['/profile/cliente']" routerLinkActive="active" (click)="toggleMenu()">👤 Mi Perfil</a>
+      </li>
+      <li><a href="#configuracion" (click)="toggleMenu()">⚙️ Configuración</a></li>
+    </ul>
+  </nav>
+
+  <!-- Overlay para cerrar menú -->
+  <div class="menu-overlay" *ngIf="menuOpen" (click)="toggleMenu()"></div>
+
+  <main class="dashboard-main">
+    <!-- Sección de Bienvenida Hero -->
+    <section class="welcome-hero">
+      <div class="hero-content">
+        <h2>¡Bienvenido de vuelta, {{ usuario?.correo?.split('@')[0] | titlecase }}! 💪</h2>
+        <p class="hero-subtitle">Tu viaje hacia el fitness continúa aquí. Cada sesión cuenta.</p>
+
+        <div class="hero-stats">
+          <div class="stat-box">
+            <span class="stat-icon">🔥</span>
+            <div>
+              <p class="stat-value">12</p>
+              <p class="stat-label">Entrenamientos</p>
+            </div>
+          </div>
+          <div class="stat-box">
+            <span class="stat-icon">📅</span>
+            <div>
+              <p class="stat-value">8</p>
+              <p class="stat-label">Días Seguidos</p>
+            </div>
+          </div>
+          <div class="stat-box">
+            <span class="stat-icon">⚡</span>
+            <div>
+              <p class="stat-value">320</p>
+              <p class="stat-label">Calorías Hoy</p>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-primary-large">Comenzar Entrenamiento →</button>
+      </div>
+    </section>
+
+    <!-- Grid de características principales -->
+    <section class="features-grid">
+      <div class="feature-card">
+        <div class="card-icon">📈</div>
+        <h3>Monitorea tu Progreso</h3>
+        <p>Visualiza tu evolución en tiempo real con gráficos detallados de tus entrenamientos y cambios físicos.</p>
+        <a href="#" class="card-link">Ver Progreso →</a>
+      </div>
+
+      <div class="feature-card">
+        <div class="card-icon">💪</div>
+        <h3>Rutinas Personalizadas</h3>
+        <p>Accede a planes de entrenamiento diseñados para tus objetivos específicos de fitness.</p>
+        <a href="#" class="card-link">Explorar Rutinas →</a>
+      </div>
+
+      <div class="feature-card">
+        <div class="card-icon">🍎</div>
+        <h3>Planes Nutricionales</h3>
+        <p>Obtén recomendaciones personalizadas de dieta adaptadas a tu metabolismo y objetivos.</p>
+        <a href="#" class="card-link">Ver Dietas →</a>
+      </div>
+
+      <div class="feature-card">
+        <div class="card-icon">🏆</div>
+        <h3>Desbloquea Logros</h3>
+        <p>Celebra hitos importantes y gana insignias por tu dedicación en el fitness.</p>
+        <a href="#" class="card-link">Ver Logros →</a>
+      </div>
+    </section>
+
+    <!-- Sección de Actividad Reciente -->
+    <section class="recent-activity">
+      <h3>Actividad Reciente</h3>
+      <div class="activity-list">
+        <div class="activity-item">
+          <span class="activity-icon">✓</span>
+          <div class="activity-content">
+            <p class="activity-title">Completaste tu rutina de pecho</p>
+            <p class="activity-time">Hace 2 horas</p>
+          </div>
+        </div>
+        <div class="activity-item">
+          <span class="activity-icon">🎯</span>
+          <div class="activity-content">
+            <p class="activity-title">Alcanzaste 1000 calorías quemadas esta semana</p>
+            <p class="activity-time">Hace 1 día</p>
+          </div>
+        </div>
+        <div class="activity-item">
+          <span class="activity-icon">💪</span>
+          <div class="activity-content">
+            <p class="activity-title">Nuevo récord personal: 50 kg en sentadillas</p>
+            <p class="activity-time">Hace 3 días</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="dashboard-footer">
+    <p>&copy; 2024 FitSo. Transforme su cuerpo y su mente. Todos los derechos reservados.</p>
+  </footer>
+</div>

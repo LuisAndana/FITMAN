@@ -1,43 +1,90 @@
-<div class="register-container">
-  <div class="image-section">
-    <img src="assets/banner.jpg" alt="Fondo gimnasio" />
-  </div>
-
-  <div class="form-section">
-    <h2>Registro de usuario</h2>
-
-    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-      <label>Nombre</label>
-      <input type="text" formControlName="nombre" placeholder="Tu nombre completo" />
-
-      <label>Correo electrónico</label>
-      <input type="email" formControlName="correo" placeholder="ejemplo@correo.com" />
-
-      <label>Contraseña</label>
-      <input type="password" formControlName="contrasena" placeholder="Mínimo 6 caracteres" />
-
-      <label>Edad</label>
-      <input type="number" formControlName="edad" placeholder="Ej: 25" />
-
-      <label>Peso (kg)</label>
-      <input type="number" step="0.1" formControlName="peso" placeholder="Ej: 60.5" />
-
-      <label>Altura (m)</label>
-      <input type="number" step="0.01" formControlName="altura" placeholder="Ej: 1.68" />
-
-      <label>Objetivo</label>
-      <select formControlName="objetivo">
-        <option value="">Selecciona un objetivo</option>
-        <option value="bajar_peso">Bajar peso</option>
-        <option value="mantener">Mantener</option>
-        <option value="aumentar_masa">Aumentar masa</option>
-      </select>
-
-      <button type="submit" [disabled]="cargando">
-        {{ cargando ? 'Registrando...' : 'Registrar' }}
+<div class="reg-shell" [formGroup]="form">
+  <div class="reg-card">
+    <!-- Toggle Cliente / Nutriólogo -->
+    <div class="type-switch">
+      <button type="button"
+              class="type-btn"
+              [class.active]="isCliente"
+              (click)="setTipo('cliente')">
+        Cliente
       </button>
-    </form>
+      <button type="button"
+              class="type-btn"
+              [class.active]="isNutriologo"
+              (click)="setTipo('nutriologo')">
+        Nutriólogo
+      </button>
+    </div>
 
-    <p class="mensaje" *ngIf="mensaje">{{ mensaje }}</p>
+    <h1 class="title">Registro de usuario</h1>
+
+    <!-- Comunes -->
+    <div class="field">
+      <label>Nombre</label>
+      <input class="input" type="text" formControlName="nombre" placeholder="Tu nombre" />
+    </div>
+
+    <div class="field">
+      <label>Correo electrónico</label>
+      <input class="input" type="email" formControlName="correo" placeholder="tucorreo@email.com" />
+    </div>
+
+    <div class="field">
+      <label>Contraseña</label>
+      <input class="input" type="password" formControlName="contrasena" placeholder="Mínimo 8 caracteres" />
+    </div>
+
+    <!-- Cliente -->
+    <ng-container *ngIf="isCliente">
+      <!-- Fila de 3 columnas con espacio -->
+      <div class="row-3">
+        <div class="field">
+          <label>Edad</label>
+          <input class="input" type="number" formControlName="edad" placeholder="Ej: 25" />
+        </div>
+        <div class="field">
+          <label>Peso (kg)</label>
+          <input class="input" type="number" step="0.1" formControlName="peso" placeholder="Ej: 60.5" />
+        </div>
+        <div class="field">
+          <label>Altura (m)</label>
+          <input class="input" type="number" step="0.01" formControlName="altura" placeholder="Ej: 1.68" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Objetivo</label>
+        <select class="input select-caret" formControlName="objetivo">
+          <option value="" disabled selected>Selecciona un objetivo</option>
+          <option *ngFor="let o of objetivos" [value]="o.value">{{ o.label }}</option>
+        </select>
+      </div>
+    </ng-container>
+
+    <!-- Nutriólogo -->
+    <ng-container *ngIf="isNutriologo">
+      <div class="field">
+        <label>Profesión</label>
+        <input class="input" type="text" formControlName="profesion" placeholder="Ej: Lic. en Nutrición" />
+      </div>
+
+      <div class="field">
+        <label>Número de cédula</label>
+        <input class="input" type="text" formControlName="numero_cedula" placeholder="Ej: 12345678" />
+      </div>
+    </ng-container>
+
+    <!-- Mensaje de error -->
+    <div class="error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+    <!-- Botón -->
+    <button class="btn-primary"
+            type="button"
+            [disabled]="cargando || form.invalid"
+            (click)="submit()">
+      {{ cargando ? 'Registrando…' : 'Registrar' }}
+    </button>
+
+    <p class="hint" *ngIf="form.invalid && !cargando">Completa todos los campos correctamente.</p>
   </div>
 </div>

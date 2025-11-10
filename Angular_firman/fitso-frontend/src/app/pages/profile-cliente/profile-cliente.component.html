@@ -1,0 +1,179 @@
+<div class="profile-cliente-container">
+  <!-- Header -->
+  <header class="profile-header">
+    <button class="btn-back" routerLink="/dashboard">← Volver</button>
+    <h1>Mi Perfil</h1>
+    <button class="btn-edit" (click)="toggleEditMode()">
+      {{ editMode ? '✓ Guardar' : '✏️ Editar' }}
+    </button>
+  </header>
+
+  <div class="profile-content">
+    <!-- INFORMACIÓN PERSONAL -->
+    <section class="profile-section">
+      <div class="section-header">
+        <h2>👤 Información Personal</h2>
+      </div>
+
+      <div class="profile-info-grid">
+        <div class="info-card">
+          <label>Nombre</label>
+          <input type="text" [(ngModel)]="usuario.nombre" [disabled]="!editMode" class="info-input" />
+        </div>
+
+        <div class="info-card">
+          <label>Correo</label>
+          <input type="email" [(ngModel)]="usuario.correo" [disabled]="true" class="info-input disabled" />
+        </div>
+
+        <div class="info-card">
+          <label>Edad</label>
+          <input type="number" [(ngModel)]="usuario.edad" [disabled]="!editMode" class="info-input" />
+        </div>
+
+        <div class="info-card">
+          <label>Objetivo</label>
+          <select [(ngModel)]="usuario.objetivo" [disabled]="!editMode" class="info-input">
+            <option value="bajar_peso">Bajar peso</option>
+            <option value="mantener">Mantener</option>
+            <option value="aumentar_masa">Aumentar masa</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- MÉTRICAS FÍSICAS -->
+    <section class="profile-section">
+      <div class="section-header">
+        <h2>📊 Métricas Físicas</h2>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">Peso Actual</div>
+          <input type="number" step="0.1" [(ngModel)]="usuario.peso" (input)="onPesoChange()" [disabled]="!editMode" class="metric-value" />
+          <span class="metric-unit">kg</span>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Altura</div>
+          <input type="number" step="0.01" [(ngModel)]="usuario.altura" [disabled]="!editMode" class="metric-value" />
+          <span class="metric-unit">m</span>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">IMC</div>
+          <div class="metric-value">{{ calcularIMC() }}</div>
+          <span class="metric-unit">kg/m²</span>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Cambio de Peso</div>
+          <div class="metric-value" [class.positivo]="cambioPeso > 0" [class.negativo]="cambioPeso < 0">
+            {{ cambioPeso | number: '1.1-1' }}
+          </div>
+          <span class="metric-unit">kg</span>
+        </div>
+      </div>
+
+      <div class="acciones-perfil">
+        <a class="btn-action" [routerLink]="['/progreso']">📊 Ver progreso</a>
+      </div>
+    </section>
+
+    <!-- ENFERMEDADES (CONTENEDOR) -->
+    <section class="profile-section" id="enfermedades">
+      <div class="section-header">
+        <h2>🩺 Enfermedades</h2>
+      </div>
+
+      <!-- Vista -->
+      <div *ngIf="!editMode; else editEnfer">
+        <div *ngIf="usuario.enfermedades?.length; else sinEnfer">
+          <ul class="chips">
+            <li class="chip" *ngFor="let e of usuario.enfermedades">{{ e }}</li>
+          </ul>
+        </div>
+        <ng-template #sinEnfer>
+          <p class="muted">Sin enfermedades registradas.</p>
+        </ng-template>
+
+        <div style="margin-top:1rem">
+          <label class="info-card">
+            <span style="color:#aaa; font-weight:600; margin-bottom:.5rem;">Descripción médica</span>
+            <div style="white-space:pre-wrap; background:#141414; border:1px solid #333; border-radius:8px; padding:12px; color:#ddd;">
+              {{ usuario.descripcion_medica || '—' }}
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Edición -->
+      <ng-template #editEnfer>
+        <!-- Búsqueda catálogo -->
+        <div class="info-card" style="margin-bottom:1rem;">
+          <label>Buscar en catálogo</label>
+          <input class="info-input" type="text" [(ngModel)]="filtroEnfer" placeholder="Buscar enfermedad…" />
+        </div>
+
+        <div class="profile-info-grid" style="grid-template-columns: 1fr 1fr;">
+          <!-- Catálogo -->
+          <div>
+            <div class="section-header" style="border:none; padding:0; margin:0 0 .5rem 0;">
+              <h3 style="font-size:1rem; color:#ffb366;">Catálogo</h3>
+            </div>
+            <div style="max-height:220px; overflow:auto; border:1px solid #333; border-radius:10px; padding:.75rem; background:#111;">
+              <label *ngFor="let item of enfermedadesFiltradas"
+                     style="display:flex; align-items:center; gap:.6rem; margin:.35rem 0; color:#ddd; cursor:pointer;">
+                <input type="checkbox" [checked]="isChecked(item)" (change)="toggleFromCatalog(item)">
+                <span>{{ item }}</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Seleccionadas + manual -->
+          <div>
+            <div class="section-header" style="border:none; padding:0; margin:0 0 .5rem 0;">
+              <h3 style="font-size:1rem; color:#ffb366;">Seleccionadas</h3>
+            </div>
+            <div class="chips">
+              <span class="chip editable" *ngFor="let e of usuario.enfermedades; let i = index">
+                {{ e }}
+                <button type="button" class="chip-remove" (click)="removeEnfermedad(i)" aria-label="Eliminar">×</button>
+              </span>
+            </div>
+            <div class="chip-input">
+              <input #enf type="text" placeholder="Añadir personalizada…" (keydown.enter)="addEnfermedad(enf)">
+              <button type="button" (click)="addEnfermedad(enf)">Agregar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Descripción médica -->
+        <div class="info-card" style="margin-top:1rem;">
+          <label>Descripción médica</label>
+          <textarea class="info-input" rows="4"
+                    [(ngModel)]="usuario.descripcion_medica"
+                    placeholder="Antecedentes, alergias, recomendaciones, etc."></textarea>
+        </div>
+      </ng-template>
+    </section>
+
+    <!-- TIPO DE USUARIO -->
+    <section class="profile-section">
+      <div class="section-header">
+        <h2>👥 Tipo de Cuenta</h2>
+      </div>
+
+      <div class="user-type-badge cliente">
+        <span class="badge-icon">👤</span>
+        <span class="badge-text">CLIENTE</span>
+      </div>
+
+      <p class="user-type-description">
+        Tu cuenta es de cliente. Puedes seguir planes de entrenamiento, monitorear tu progreso
+        y conectar con nutriólogos para recibir dietas personalizadas.
+      </p>
+    </section>
+  </div>
+</div>

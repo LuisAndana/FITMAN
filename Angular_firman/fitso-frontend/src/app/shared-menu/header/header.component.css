@@ -1,0 +1,135 @@
+.site-header{
+  position:sticky;
+  top:0;
+  z-index:1000;
+  background:#1a1a1a;
+  border-bottom:2px solid #ff7a00;
+}
+.header-inner{
+  max-width:1200px;
+  margin:auto;
+  padding:10px 16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.brand{
+  font-weight:700;
+  color:#ff7a00;
+  text-decoration:none;
+  letter-spacing:.2px;
+}
+.brand:hover { opacity:.9; }
+
+.spacer{flex:1}
+
+.user{
+  display:flex;
+  align-items:center;
+  gap:10px
+}
+.email{color:#bbb; font-size:.95rem;}
+.btn-logout{
+  background:#ff7a00;
+  border:none;
+  border-radius:8px;
+  color:#111;
+  padding:6px 12px;
+  cursor:pointer;
+  font-weight:700;
+  transition:transform .15s ease, box-shadow .15s ease, opacity .15s;
+}
+.btn-logout:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 20px rgba(255,122,0,.25);
+}
+
+/* Hamburguesa */
+.menu-toggle{
+  width:36px;
+  height:30px;
+  background:transparent;
+  border:none;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  cursor:pointer
+}
+.menu-toggle span{
+  display:block;
+  height:3px;
+  background:#eee;
+  border-radius:2px;
+  transition:.2s
+}
+.menu-toggle.active span:nth-child(1){ transform:translateY(11px) rotate(45deg) }
+.menu-toggle.active span:nth-child(2){ opacity:0 }
+.menu-toggle.active span:nth-child(3){ transform:translateY(-11px) rotate(-45deg) }
+
+/* Drawer */
+.drawer{
+  position:fixed;
+  left:-290px;
+  top:0;
+  height:100vh;
+  width:290px;
+  background:#121212;
+  border-right:1px solid #333;
+  transition:left .25s ease;
+  z-index:1001
+}
+.drawer.open{ left:0 }
+
+.drawer-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 16px;
+  border-bottom:1px solid #2a2a2a
+}
+.brand-mini{
+  color:#ff7a00;
+  font-weight:700
+}
+.close{
+  background:transparent;
+  border:none;
+  color:#eee;
+  font-size:24px;
+  cursor:pointer
+}
+
+.drawer-list{
+  list-style:none;
+  margin:0;
+  padding:10px
+}
+.drawer-list li{ margin:6px 0 }
+.drawer-list a{
+  display:block;
+  padding:12px 14px;
+  color:#ddd;
+  text-decoration:none;
+  border-radius:10px;
+  transition:background .15s ease, color .15s ease
+}
+.drawer-list a:hover{ background:#1f1f1f; color:#fff }
+
+/* Overlay */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.4);
+  backdrop-filter:blur(1px);
+  z-index:1000
+}
+
+/* Accesibilidad focus-visible */
+.menu-toggle:focus-visible,
+.btn-logout:focus-visible,
+.drawer-list a:focus-visible,
+.close:focus-visible{
+  outline:2px solid #ff7a00;
+  outline-offset:2px;
+  border-radius:8px;
+}

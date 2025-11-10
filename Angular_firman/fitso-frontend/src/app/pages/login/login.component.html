@@ -7,13 +7,41 @@
     <h2>Iniciar sesión</h2>
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      <label>Correo electrónico</label>
-      <input type="email" formControlName="correo" placeholder="ejemplo@correo.com" />
+      <label for="correo">Correo electrónico</label>
+      <input
+        id="correo"
+        type="email"
+        formControlName="correo"
+        placeholder="ejemplo@correo.com"
+        [class.invalid]="loginForm.get('correo')?.invalid && loginForm.get('correo')?.touched"
+        autocomplete="email"
+      />
+      <small *ngIf="loginForm.get('correo')?.hasError('required') && loginForm.get('correo')?.touched">
+        El correo es obligatorio.
+      </small>
+      <small *ngIf="loginForm.get('correo')?.hasError('email') && loginForm.get('correo')?.touched">
+        Formato de correo inválido.
+      </small>
 
-      <label>Contraseña</label>
-      <input type="password" formControlName="contrasena" placeholder="Tu contraseña" />
+      <label for="contrasena">Contraseña</label>
+      <input
+        id="contrasena"
+        type="password"
+        formControlName="contrasena"
+        placeholder="Tu contraseña"
+        [class.invalid]="loginForm.get('contrasena')?.invalid && loginForm.get('contrasena')?.touched"
+        autocomplete="current-password"
+      />
+      <small *ngIf="loginForm.get('contrasena')?.hasError('required') && loginForm.get('contrasena')?.touched">
+        La contraseña es obligatoria.
+      </small>
+      <small *ngIf="loginForm.get('contrasena')?.hasError('minlength') && loginForm.get('contrasena')?.touched">
+        Mínimo 6 caracteres.
+      </small>
 
-      <button type="submit">Ingresar</button>
+      <button type="submit" [disabled]="cargando || loginForm.invalid">
+        {{ cargando ? 'Ingresando…' : 'Ingresar' }}
+      </button>
     </form>
 
     <p class="mensaje" *ngIf="mensaje">{{ mensaje }}</p>
@@ -22,4 +50,3 @@
     </p>
   </div>
 </div>
-

@@ -1,0 +1,11 @@
+.nutri-container { max-width: 1100px; margin: 0 auto; padding: 1.5rem; color: #eee; }
+.top { display:flex; justify-content: space-between; align-items: baseline; margin-bottom: 1rem; }
+.top h1 { color:#ff7b00; }
+.me { text-align: right; }
+.card { background: #141414; border: 1px solid #2a2a2a; border-radius: 12px; padding: 1rem; }
+.tbl { width:100%; border-collapse: collapse; }
+.tbl th, .tbl td { padding: .6rem .5rem; border-bottom: 1px solid #2b2b2b; }
+.tbl th { text-align: left; color:#aaa; font-weight:600; }
+.muted { color:#9aa0a6; }
+.btn { display:inline-block; background:#ff7b00; color:#111; padding:.35rem .6rem; border-radius:8px; text-decoration:none; font-weight:700; }
+.error { color:#ff6b6b; margin-top:.5rem; }

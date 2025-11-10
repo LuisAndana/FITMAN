@@ -1,0 +1,201 @@
+/* --- Reset mínimo y aislamiento --- */
+*{ box-sizing:border-box; min-width:0 }
+
+/* Paleta y fondo dentro del host (encapsulado Angular) */
+:host{
+  --bg:#0b0b0c;
+  --surface:#17181a;      /* panel / tarjetas */
+  --surface-2:#1d1f22;    /* tarjetas */
+  --bd:#2e3238;           /* bordes visibles */
+  --text:#eef2f6;
+  --muted:#b9c0c8;
+  --accent:#ff7a00;
+  --success:#10b981;
+
+  display:block;
+  position:relative;
+  z-index:0;
+  color:var(--text);
+  background:var(--bg);
+  min-height:100dvh; /* que se vea el fondo */
+}
+
+/* Contenedor */
+.page{
+  max-width:1100px;
+  margin:24px auto 56px;
+  padding:0 20px;
+  background:transparent;
+}
+
+/* Header */
+.page-header{ text-align:center; margin-bottom:12px }
+.page-title{
+  margin:0; font-size:2rem; font-weight:800; color:var(--accent);
+}
+.page-sub{ margin:6px 0 0; color:var(--muted) }
+
+/* Panel de filtros */
+.panel{
+  border:1px solid var(--bd);
+  border-radius:16px;
+  padding:16px;
+  margin:16px 0 26px;
+  background:var(--surface);
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+  position:relative;
+  overflow:visible;
+}
+.panel::before{ content:none }
+
+.panel-title{ display:flex; align-items:center; gap:10px; margin-bottom:12px }
+.panel-title .dot{
+  width:10px; height:10px; border-radius:50%; background:var(--accent)
+}
+.panel-title h2{ margin:0; font-size:1rem; color:#ffd9b5 }
+
+/* Controles */
+.filters{
+  display:grid;
+  grid-template-columns: 1fr minmax(180px,220px) max-content;
+  gap:12px;
+  align-items:center;
+}
+@media (max-width:860px){
+  .filters{ grid-template-columns:1fr }
+}
+.field{ width:100% }
+
+.input,.select{
+  width:100%;
+  background:#101114;
+  border:1px solid var(--bd);
+  color:var(--text);
+  border-radius:12px;
+  padding:12px 14px;
+  font-size:.95rem;
+  outline:none;
+}
+.input::placeholder{ color:#8f96a3 }
+.input:focus,.select:focus{
+  border-color:#49505a;
+  box-shadow:0 0 0 3px rgba(255,122,0,.23);
+}
+
+.select{ appearance:none; background-image:none }
+.select-wrap{ position:relative }
+.select-wrap::after{
+  content:"▾"; position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  color:#9aa0a6; pointer-events:none; font-size:.95rem
+}
+
+/* Botones */
+.btn{
+  border:1px solid var(--bd);
+  background:#101114;
+  color:var(--text);
+  border-radius:12px;
+  padding:11px 16px;
+  font-weight:700;
+  cursor:pointer;
+  transition:background .15s, transform .15s, opacity .15s, border-color .15s, filter .15s;
+}
+.btn:hover{ transform:translateY(-1px) }
+.btn:disabled{ opacity:.55; cursor:not-allowed }
+.btn.primary{
+  background:var(--accent);
+  color:#111;
+  border:none;
+}
+.btn.primary:hover{ filter:brightness(1.06) }
+
+/* Faltaba: outline */
+.btn.outline{
+  background:transparent;
+  border-color:var(--bd);
+}
+.btn.outline:hover{
+  border-color:#3a414b;
+  background:rgba(255,122,0,.06);
+}
+
+/* Botón ghost (en tarjetas) */
+.btn.ghost{
+  background:transparent;
+  border:1px solid rgba(255,122,0,.45);
+  color:#ffdaba;
+}
+.btn.ghost:hover{ background:rgba(255,122,0,.12) }
+
+/* Grid */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));
+  gap:18px;
+  margin-top:6px;
+}
+
+/* Tarjeta */
+.card{
+  background:var(--surface-2);
+  border:1px solid var(--bd);
+  border-radius:16px;
+  padding:18px;
+  display:flex; flex-direction:column; gap:14px;
+  min-height:160px;
+  box-shadow:0 10px 28px rgba(0,0,0,.25);
+  transition:border-color .15s, transform .15s;
+}
+.card:hover{ border-color:#3a414b; transform:translateY(-1px) }
+.card-head{ display:flex; gap:12px; align-items:flex-start; flex:1 }
+
+.avatar{
+  width:54px; height:54px; border-radius:50%;
+  display:grid; place-items:center; font-weight:900; font-size:1.15rem; color:#111;
+  background:linear-gradient(180deg, #ffc074, var(--accent));
+  box-shadow:0 0 0 3px rgba(255,122,0,.18);
+}
+.meta{ flex:1; min-width:0 }
+.name-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap }
+.name{ margin:0; font-weight:800; color:#fff3e5; font-size:1.06rem }
+.prof{ margin:.2rem 0 0; color:#e5e9ee; font-size:.95rem }
+.muted{ color:#aeb4ba }
+.small{ font-size:.86rem }
+
+.badge{
+  font-size:.72rem; padding:.25rem .55rem; border-radius:999px;
+  border:1px solid rgba(16,185,129,.3);
+  background:#064e3b; color:#d1fae5;
+}
+
+.card-actions{ display:flex; justify-content:flex-end; margin-top:auto; }
+
+/* Paginación */
+.pager{
+  margin-top:24px; display:flex; align-items:center; justify-content:center; gap:14px;
+}
+.pager-info{ color:#c3cad2 }
+
+/* Estados */
+.empty{ display:grid; place-items:center; padding:36px 0 }
+.empty-inner{
+  background:var(--surface); border:1px solid var(--bd); border-radius:16px;
+  padding:28px 22px; width:100%; max-width:520px; text-align:center;
+}
+.empty-inner h3{ margin:0 0 6px; color:#ffdaba }
+.empty-inner p{ margin:0; color:#b9bec4 }
+
+/* Skeleton */
+.skeleton-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px }
+.skeleton-card{
+  height:160px; border-radius:16px; border:1px solid var(--bd);
+  background:linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.12), rgba(255,255,255,.06));
+  background-size:200% 100%; animation:shimmer 1.3s infinite;
+}
+@keyframes shimmer{ 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* Responsive */
+@media (max-width:768px){
+  .grid{ grid-template-columns:1fr }
+  .page-title{ font-size:1.6rem }
+}

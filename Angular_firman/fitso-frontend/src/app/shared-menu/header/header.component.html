@@ -1,0 +1,54 @@
+<header class="site-header">
+  <div class="header-inner">
+    <!-- Hamburguesa -->
+    <button class="menu-toggle"
+            (click)="toggleMenu()
+"
+            [class.active]="menuOpen"
+            aria-label="Abrir menú">
+      <span></span><span></span><span></span>
+    </button>
+
+    <!-- Brand: redirige según tipo (ruta corregida para nutriólogo) -->
+    <a class="brand"
+       [routerLink]="[ isNutriologo() ? '/nutriologo/dashboard' : '/dashboard' ]">
+      ⚡ FitSo
+    </a>
+
+    <div class="spacer"></div>
+
+    <div class="user">
+      <span class="email" *ngIf="correo">{{ correo }}</span>
+      <button class="btn-logout" (click)="logout()">Salir</button>
+    </div>
+  </div>
+
+  <!-- Menú lateral -->
+  <nav class="drawer" [class.open]="menuOpen" role="navigation" aria-label="Menú principal">
+    <div class="drawer-header">
+      <span class="brand-mini">⚡ FitSo</span>
+      <button class="close" (click)="closeMenu()" aria-label="Cerrar menú">×</button>
+    </div>
+
+    <ul class="drawer-list">
+      <!-- Opciones para CLIENTE -->
+      <ng-container *ngIf="!isNutriologo(); else nutriMenu">
+        <li><a (click)="go('/dashboard')">📊 Dashboard</a></li>
+        <li><a (click)="go('/profile/cliente')">👤 Mi Perfil</a></li>
+        <li><a (click)="go('/progreso')">📈 Mi Progreso</a></li>
+        <!-- NUEVO -->
+        <li><a (click)="go('/nutriologos')">🩺 Nutriólogos</a></li>
+      </ng-container>
+
+      <!-- Opciones para NUTRIÓLOGO -->
+      <ng-template #nutriMenu>
+        <li><a (click)="go('/nutriologo/dashboard')">🧪 Dashboard Nutriólogo</a></li>
+        <li><a (click)="go('/profile/nutriologo')">🩺 Perfil (Nutriólogo)</a></li>
+        <li><a (click)="go('/nutriologo/clientes')">👥 Mis Clientes</a></li>
+      </ng-template>
+    </ul>
+  </nav>
+
+  <!-- Overlay -->
+  <div class="overlay" *ngIf="menuOpen" (click)="closeMenu()"></div>
+</header>

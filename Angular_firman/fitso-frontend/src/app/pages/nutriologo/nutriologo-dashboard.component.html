@@ -1,0 +1,46 @@
+<div class="nutri-container">
+  <header class="top">
+    <h1>Panel de Nutriólogo</h1>
+    <div class="me" *ngIf="me">
+      <span>👩‍⚕️ {{ me.nombre }}</span>
+      <small>{{ me.correo }}</small>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2>Pacientes</h2>
+    <div *ngIf="loading" class="muted">Cargando…</div>
+    <div *ngIf="!loading && clientes.length === 0" class="muted">Sin clientes registrados.</div>
+
+    <table *ngIf="!loading && clientes.length" class="tbl">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nombre</th>
+          <th>Correo</th>
+          <th>Edad</th>
+          <th>Peso</th>
+          <th>Altura</th>
+          <th>Objetivo</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of clientes; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td>{{ c.nombre }}</td>
+          <td>{{ c.correo }}</td>
+          <td>{{ c.edad || '–' }}</td>
+          <td>{{ c.peso || '–' }}</td>
+          <td>{{ c.altura || '–' }}</td>
+          <td>{{ c.objetivo || '–' }}</td>
+          <td>
+            <a [routerLink]="['/nutriologo/clientes', c.id_usuario]" class="btn">Ver</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="error" *ngIf="msg">{{ msg }}</p>
+  </section>
+</div>

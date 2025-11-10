@@ -1,0 +1,80 @@
+<div class="wrap">
+  <!-- Back -->
+  <a routerLink="/nutriologos" class="back-btn" aria-label="Volver a la lista">
+    <span>←</span> Volver
+  </a>
+
+  <!-- Skeleton mientras carga -->
+  <section *ngIf="loading" class="hero skeleton">
+    <div class="s-line l1"></div>
+    <div class="s-line l2"></div>
+    <div class="s-line l3"></div>
+  </section>
+
+  <!-- Contenido -->
+  <section *ngIf="!loading && data" class="hero">
+    <div class="hero-inner">
+      <!-- Avatar + nombre -->
+      <div class="id-block">
+        <div class="avatar" aria-hidden="true">
+          {{ (data.nombre || 'N')[0] | uppercase }}
+        </div>
+
+        <div>
+          <div class="title-row">
+            <h1 class="title">{{ data.nombre || 'Nutriólogo' }}</h1>
+            <span *ngIf="data.validado" class="badge-ok">Validado</span>
+          </div>
+          <p class="subtitle">
+            {{ data.profesion || 'Profesión no especificada' }}
+          </p>
+          <p class="meta">Cédula: {{ data.numero_cedula_mask || '****' }}</p>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="cta-row">
+        <a *ngIf="data.documento_url"
+           class="btn ghost"
+           [href]="data.documento_url"
+           target="_blank" rel="noopener">
+          Ver documento
+        </a>
+        <button class="btn primary" type="button" (click)="requestAppointment()">
+          Agendar consulta
+        </button>
+        <button class="btn outline" type="button" (click)="sendMessage()">
+          Enviar mensaje
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cards informativas (matching Home) -->
+  <div class="cards">
+    <article class="card">
+      <div class="icon">🍎</div>
+      <h3>Plan Nutricional</h3>
+      <p>
+        Elaboración de planes personalizados basados en tus objetivos y
+        estilo de vida.
+      </p>
+    </article>
+
+    <article class="card">
+      <div class="icon">📅</div>
+      <h3>Seguimiento</h3>
+      <p>
+        Sesiones de seguimiento para ajustar tu plan y medir tu progreso.
+      </p>
+    </article>
+
+    <article class="card">
+      <div class="icon">💬</div>
+      <h3>Asesoría</h3>
+      <p>
+        Resolución de dudas sobre alimentación, hábitos y suplementación.
+      </p>
+    </article>
+  </div>
+</div>

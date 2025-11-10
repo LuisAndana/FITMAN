@@ -6,3 +6,17 @@ html, body {
   width: 100%;
   overflow: hidden;
 }
+
+
+/* --- Forzar scroll vertical global --- */
+html, body, app-root {
+  min-height: 100% !important;
+  height: auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+}
+
+/* Si tenías algo que hacía la pantalla fija */
+body, app-root, .app-shell, .content-wrapper {
+  max-height: none !important;
+}

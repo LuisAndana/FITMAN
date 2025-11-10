@@ -1,0 +1,7 @@
+.wrap { max-width: 1200px; margin: 0 auto; padding: 1rem; color:#eee; }
+.back { color:#ff7b00; text-decoration:none; }
+.head { display:flex; align-items: baseline; justify-content: space-between; margin:.5rem 0 1rem; }
+.meta { text-align:right; }
+.card { background:#141414; border:1px solid #2a2a2a; border-radius:12px; padding:.8rem; }
+.muted { color:#9aa0a6; }
+.error { color:#ff6b6b; }

@@ -1,0 +1,428 @@
+:root {
+  --primary: #667eea;
+  --primary-dark: #5568d3;
+  --secondary: #764ba2;
+  --secondary-dark: #633a87;
+  --success: #51cf66;
+  --danger: #ff6b6b;
+  --light: #f8f9fa;
+  --dark: #2d3436;
+  --border: #e9ecef;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.register-type-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Efecto de fondo animado */
+.register-type-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.register-type-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 50px 40px;
+  width: 100%;
+  max-width: 700px;
+  text-align: center;
+  animation: slideUp 0.6s ease-out;
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.register-type-card h1 {
+  color: var(--dark);
+  margin-bottom: 15px;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.register-type-card > p {
+  color: #666;
+  margin-bottom: 40px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.type-selection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin: 40px 0;
+}
+
+.type-card {
+  padding: 35px 25px;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background: var(--light);
+  border: 2px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Efecto de brillo */
+.type-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 70%
+  );
+  transform: rotate(45deg);
+  opacity: 0;
+  transition: opacity 0.6s;
+  pointer-events: none;
+}
+
+.type-card:hover::before {
+  opacity: 1;
+}
+
+.type-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  border-color: transparent;
+}
+
+.cliente-card {
+  border-color: rgba(102, 126, 234, 0.2);
+}
+
+.cliente-card:hover {
+  background: linear-gradient(135deg, #f0f3ff 0%, #e8ecff 100%);
+  border-color: var(--primary);
+  box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
+}
+
+.nutriologo-card {
+  border-color: rgba(118, 75, 162, 0.2);
+}
+
+.nutriologo-card:hover {
+  background: linear-gradient(135deg, #f5f0ff 0%, #f0e8ff 100%);
+  border-color: var(--secondary);
+  box-shadow: 0 15px 40px rgba(118, 75, 162, 0.2);
+}
+
+.type-card .icon {
+  font-size: 50px;
+  margin-bottom: 20px;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.type-card:hover .icon {
+  transform: scale(1.15) rotate(5deg);
+}
+
+.type-card h2 {
+  color: var(--dark);
+  margin: 20px 0 12px 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.type-card p {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 25px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.btn {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn-cliente {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.btn-cliente:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+}
+
+.btn-cliente:active {
+  transform: translateY(0);
+}
+
+.btn-nutriologo {
+  background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+  color: white;
+  box-shadow: 0 8px 20px rgba(118, 75, 162, 0.3);
+}
+
+.btn-nutriologo:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(118, 75, 162, 0.4);
+}
+
+.btn-nutriologo:active {
+  transform: translateY(0);
+}
+
+.back-link {
+  margin-top: 35px;
+  padding-top: 25px;
+  border-top: 2px solid var(--border);
+}
+
+.back-link p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.back-link a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  position: relative;
+  display: inline-block;
+}
+
+.back-link a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--primary);
+  transition: width 0.3s ease;
+}
+
+.back-link a:hover::after {
+  width: 100%;
+}
+
+.back-link a:hover {
+  color: var(--primary-dark);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .register-type-card {
+    padding: 35px 25px;
+  }
+
+  .register-type-card h1 {
+    font-size: 28px;
+  }
+
+  .type-selection {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .type-card {
+    padding: 30px 20px;
+  }
+
+  .type-card .icon {
+    font-size: 45px;
+  }
+
+  .type-card h2 {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .register-type-container {
+    padding: 15px;
+  }
+
+  .register-type-card {
+    padding: 25px 20px;
+    border-radius: 15px;
+  }
+
+  .register-type-card h1 {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .register-type-card > p {
+    font-size: 14px;
+    margin-bottom: 25px;
+  }
+
+  .type-selection {
+    gap: 15px;
+    margin: 25px 0;
+  }
+
+  .type-card {
+    padding: 25px 15px;
+    border-radius: 12px;
+  }
+
+  .type-card .icon {
+    font-size: 40px;
+    margin-bottom: 15px;
+  }
+
+  .type-card h2 {
+    font-size: 18px;
+    margin: 15px 0 10px 0;
+  }
+
+  .type-card p {
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+
+  .btn {
+    padding: 11px 20px;
+    font-size: 13px;
+  }
+
+  .back-link {
+    margin-top: 25px;
+    padding-top: 20px;
+  }
+
+  .back-link p {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 400px) {
+  .register-type-card {
+    padding: 20px 15px;
+  }
+
+  .register-type-card h1 {
+    font-size: 22px;
+  }
+
+  .type-card .icon {
+    font-size: 35px;
+  }
+
+  .type-card h2 {
+    font-size: 16px;
+  }
+
+  .type-card p {
+    font-size: 12px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .register-type-card {
+    background: #1a1a1a;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  }
+
+  .register-type-card h1 {
+    color: #ffffff;
+  }
+
+  .register-type-card > p {
+    color: #b0b0b0;
+  }
+
+  .type-card {
+    background: #2a2a2a;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .type-card h2 {
+    color: #ffffff;
+  }
+
+  .type-card p {
+    color: #b0b0b0;
+  }
+
+  .back-link {
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .back-link p {
+    color: #b0b0b0;
+  }
+}

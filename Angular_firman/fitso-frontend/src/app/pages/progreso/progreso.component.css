@@ -1,0 +1,70 @@
+/* Layout básico */
+.progreso-container{
+  min-height: 100vh;
+  color: #fff;
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+  font-family: 'Poppins', sans-serif;
+}
+.progreso-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 1.2rem 1.6rem;
+  border-bottom: 1px solid #ff7b00;
+  background: linear-gradient(90deg, #1a1a1a 0%, #2d2d2d 100%);
+}
+.progreso-header h1{ color:#ff7b00; margin:0; }
+.btn-back{
+  background: linear-gradient(135deg, #ff7b00, #ffa64d);
+  color:#111; border:none; border-radius:8px; padding:.6rem 1rem; font-weight:700; cursor:pointer;
+}
+
+/* KPIs */
+.kpis{
+  display:grid; gap:1rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  padding: 1.2rem 1.6rem;
+}
+.kpi{
+  background: rgba(0,0,0,.25);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+}
+.kpi-label{ color:#9aa0a6; font-weight:600; font-size:.9rem; }
+.kpi-main{ display:block; font-size:2rem; font-weight:800; color:#ff7b00; }
+.kpi-main small{ font-size:.9rem; font-weight:700; color:#ffcc8a; margin-left:.25rem; }
+.kpi-main.pos{ color:#4caf50; }
+.kpi-main.neg{ color:#ff6b6b; }
+.kpi-sub{ display:block; color:#9aa0a6; font-size:.9rem; margin-top:.25rem; }
+.progress{
+  margin-top:.5rem; height:10px; border-radius:20px; overflow:hidden;
+  background: rgba(255,255,255,.08);
+}
+.fill{
+  height:100%; width:0%;
+  background: linear-gradient(90deg, #ff7b00, #ffa64d);
+}
+
+/* Sección */
+.profile-section{
+  padding: 1.2rem 1.6rem;
+}
+.section-header{
+  border-bottom:2px solid rgba(255,123,0,.25);
+  padding-bottom:.6rem; margin-bottom:1rem;
+}
+
+/* Gráfica estable */
+.chart-card{
+  position: relative;
+  width: 100%;
+  height: 380px;        /* Alto fijo: ajústalo a tu gusto */
+  max-height: 420px;
+  overflow: hidden;     /* Evita desbordes y “estiramientos” */
+  border-radius: 12px;
+  background: rgba(0,0,0,.25);
+  border: 1px solid rgba(255,255,255,.06);
+}
+.chart-card > canvas{
+  position: absolute;
+  inset: 0;            /* top/right/bottom/left:0 */
+}

@@ -1,0 +1,20 @@
+<div class="wrap">
+  <a routerLink="/dashboard/nutriologo" class="back">← Volver</a>
+
+  <header class="head">
+    <h1>Paciente</h1>
+    <div class="meta" *ngIf="cliente">
+      <div><strong>{{ cliente.nombre }}</strong></div>
+      <div class="muted">{{ cliente.correo }}</div>
+      <div class="muted">Objetivo: {{ cliente.objetivo || '–' }}</div>
+    </div>
+  </header>
+
+  <section class="card" *ngIf="!loading && cliente">
+    <!-- Reusa ProgresoComponent pasándole el id por la URL actual (/nutriologo/clientes/:id) -->
+    <app-progreso></app-progreso>
+  </section>
+
+  <p class="muted" *ngIf="loading">Cargando…</p>
+  <p class="error" *ngIf="!loading && msg">{{ msg }}</p>
+</div>

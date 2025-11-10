@@ -1,0 +1,126 @@
+<div class="profile-cliente-container">
+  <!-- Header -->
+  <header class="profile-header">
+    <button class="btn-back" routerLink="/nutriologo/dashboard">← Volver</button>
+    <h1>Mi Perfil (Nutriólogo)</h1>
+    <button class="btn-edit" (click)="toggleEditMode()">
+      {{ editMode ? '✓ Guardar' : '✏️ Editar' }}
+    </button>
+  </header>
+
+  <div class="profile-content">
+    <!-- INFORMACIÓN PROFESIONAL -->
+    <section class="profile-section">
+      <div class="section-header">
+        <h2>👤 Información Profesional</h2>
+      </div>
+
+      <div class="profile-info-grid">
+        <div class="info-card">
+          <label>Nombre</label>
+          <input type="text" [(ngModel)]="usuario.nombre" [disabled]="!editMode" class="info-input" />
+        </div>
+
+        <div class="info-card">
+          <label>Correo</label>
+          <input type="email" [(ngModel)]="usuario.correo" disabled class="info-input disabled" />
+        </div>
+
+        <div class="info-card">
+          <label>Profesión</label>
+          <input type="text" [(ngModel)]="usuario.profesion" [disabled]="!editMode" class="info-input" placeholder="Lic. en Nutrición" />
+        </div>
+
+        <div class="info-card">
+          <label>Número de cédula</label>
+          <input type="text" [(ngModel)]="usuario.numero_cedula" [disabled]="!editMode" class="info-input" placeholder="12-34-5678" />
+        </div>
+      </div>
+    </section>
+
+    <!-- ESTADO DE VALIDACIÓN -->
+    <section class="profile-section">
+      <div class="section-header">
+        <h2>✅ Estado de Validación</h2>
+      </div>
+
+      <div class="status-row">
+        <span
+          class="badge-state"
+          [class.validado]="usuario.validado"
+          [class.pendiente]="!usuario.validado">
+          {{ usuario.validado ? 'Validado' : 'Pendiente' }}
+        </span>
+
+        <p class="muted" *ngIf="!usuario.validado" style="margin-left:.75rem;">
+          Cuando subas tu cédula y sea verificada, tu cuenta aparecerá como validada.
+        </p>
+      </div>
+
+      <!-- SUBIR DOCUMENTO DE VALIDACIÓN -->
+      <div class="upload-card">
+        <div class="upload-head">
+          <h3>Subir documento que avale tu profesión</h3>
+          <span class="muted">Formatos permitidos: PDF, JPG, PNG — Máx. 10MB</span>
+        </div>
+
+        <label class="dropzone">
+          <input type="file"
+                 (change)="onFileSelected($event)"
+                 accept="application/pdf,image/png,image/jpeg"
+                 hidden />
+          <div class="dropzone-inner">
+            <div class="dz-icon">📄</div>
+            <div class="dz-text">
+              <strong>Haz clic para seleccionar</strong>
+              <span class="muted">o arrastra y suelta aquí</span>
+            </div>
+          </div>
+        </label>
+
+        <div class="file-row" *ngIf="archivoSeleccionado">
+          <div class="file-name">📎 {{ archivoNombre }}</div>
+          <div class="file-actions">
+            <button class="btn-ghost" type="button" (click)="cancelarSeleccion()">Cancelar</button>
+            <button class="btn-primary" type="button" (click)="subirDocumento()" [disabled]="subiendo">Subir</button>
+          </div>
+        </div>
+
+        <div class="progress" *ngIf="subiendo || (subidaProgreso>0 && subidaProgreso<100)">
+          <div class="bar" [style.width.%]="subidaProgreso"></div>
+          <span>{{ subidaProgreso }}%</span>
+        </div>
+
+        <p class="upload-msg" *ngIf="subidaMensaje">{{ subidaMensaje }}</p>
+
+        <!-- Mostrar link si ya existe un documento cargado -->
+        <div class="prev-doc" *ngIf="usuario?.documento_url">
+          <a [href]="usuario.documento_url" target="_blank" rel="noopener">Ver documento cargado</a>
+        </div>
+      </div>
+      <!-- /SUBIR DOCUMENTO -->
+    </section>
+
+    <!-- TIPO DE CUENTA -->
+    <section class="profile-section">
+      <div class="section-header">
+        <h2>👥 Tipo de Cuenta</h2>
+      </div>
+
+      <div class="user-type-badge nutriologo">
+        <span class="badge-icon">🧑‍⚕️</span>
+        <span class="badge-text">NUTRIÓLOGO</span>
+      </div>
+
+      <p class="user-type-description">
+        Esta cuenta permite gestionar clientes, crear y asignar planes de nutrición, y revisar su progreso.
+      </p>
+
+      <div class="acciones-perfil" style="margin-top:1rem;">
+        <a class="btn-action" [routerLink]="['/nutriologo/dashboard']">👥 Ver mis clientes</a>
+      </div>
+    </section>
+
+    <div class="message" *ngIf="mensaje">{{ mensaje }}</div>
+  </div>
+</div>

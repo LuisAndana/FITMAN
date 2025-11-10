@@ -1,10 +1,12 @@
+/* Layout general */
 .login-container {
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
   background-color: #0f0f0f;
-  color: white;
+  color: #fff;
 }
 
+/* Panel izquierdo con imagen */
 .banner {
   flex: 1;
   background-color: #000;
@@ -17,6 +19,7 @@
   filter: brightness(0.5);
 }
 
+/* Panel derecho con formulario */
 .form-section {
   flex: 1;
   display: flex;
@@ -32,11 +35,12 @@ h2 {
   margin-bottom: 1rem;
 }
 
+/* Formulario */
 form {
   display: flex;
   flex-direction: column;
   width: 80%;
-  max-width: 400px;
+  max-width: 420px;
 }
 
 label {
@@ -46,41 +50,88 @@ label {
 }
 
 input {
-  margin-top: 5px;
-  padding: 10px;
+  margin-top: 6px;
+  padding: 12px;
   border: none;
-  border-radius: 5px;
+  border-radius: 10px;
   background-color: #2a2a2a;
   color: white;
+  outline: none;
+  transition: box-shadow 0.2s ease, transform 0.05s ease;
 }
 
+input:focus {
+  box-shadow: 0 0 0 2px #ff7b00aa;
+}
+
+input.invalid {
+  box-shadow: 0 0 0 2px #ff7b00aa;
+}
+
+/* Mensajes de validación por campo */
+small {
+  color: #ffa64d;
+  margin-top: 4px;
+}
+
+/* Botón */
 button {
   margin-top: 20px;
-  padding: 10px;
-  background-color: #ff7b00;
+  padding: 12px;
+  background: linear-gradient(135deg, #ff7b00, #ffa64d);
   border: none;
-  color: white;
-  font-weight: bold;
-  border-radius: 5px;
+  color: #1b1b1b;
+  font-weight: 800;
+  border-radius: 12px;
   cursor: pointer;
-  transition: 0.3s;
+  transition: transform 0.06s ease, filter 0.2s ease;
 }
 
 button:hover {
-  background-color: #ffa64d;
+  filter: brightness(1.05);
 }
 
+button:active {
+  transform: translateY(1px);
+}
+
+button[disabled] {
+  opacity: 0.7;
+  cursor: not-allowed;
+  filter: grayscale(0.2);
+}
+
+/* Mensaje global (éxito / error) */
 .mensaje {
   color: #ff7b00;
   margin-top: 15px;
+  text-align: center;
 }
 
+/* Link a registro */
 .registro-link {
   margin-top: 20px;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .registro-link a {
   color: #ff7b00;
   text-decoration: none;
+}
+
+.registro-link a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 980px) {
+  .login-container {
+    flex-direction: column;
+  }
+  .banner {
+    display: none; /* oculta la imagen en pantallas pequeñas para priorizar el form */
+  }
+  .form-section {
+    min-height: 100vh;
+  }
 }

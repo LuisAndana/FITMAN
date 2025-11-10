@@ -1,0 +1,52 @@
+<div class="progreso-container">
+  <header class="progreso-header">
+    <button class="btn-back" routerLink="/dashboard">← Volver</button>
+    <h1>Mi Progreso</h1>
+  </header>
+
+  <!-- KPIs -->
+  <section class="kpis">
+    <div class="kpi">
+      <span class="kpi-label">PESO ACTUAL</span>
+      <span class="kpi-main">{{ pesoActual | number:'1.1-1' }} <small>kg</small></span>
+      <span class="kpi-sub">{{ pesoInicial | number:'1.1-1' }} kg inicial</span>
+    </div>
+
+    <div class="kpi">
+      <span class="kpi-label">IMC ACTUAL</span>
+      <span class="kpi-main">{{ imcActual | number:'1.1-1' }}</span>
+      <span class="kpi-sub">{{ imcInicial | number:'1.1-1' }} inicial</span>
+    </div>
+
+    <div class="kpi">
+      <span class="kpi-label">CAMBIO DE PESO</span>
+      <span
+        class="kpi-main"
+        [class.pos]="cambioPeso > 0"
+        [class.neg]="cambioPeso < 0"
+      >
+        {{ cambioPeso | number:'1.1-1' }} <small>kg</small>
+      </span>
+      <span class="kpi-sub">vs. inicio</span>
+    </div>
+
+    <div class="kpi">
+      <span class="kpi-label">PROGRESO</span>
+      <span class="kpi-main">{{ progreso }}<small>%</small></span>
+      <div class="progress">
+        <div class="fill" [style.width.%]="progreso"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GRÁFICA -->
+  <section class="profile-section">
+    <div class="section-header">
+      <h2>📈 Evolución de Peso e IMC</h2>
+    </div>
+
+    <div class="chart-card">
+      <canvas id="pesoImcChart"></canvas>
+    </div>
+  </section>
+</div>

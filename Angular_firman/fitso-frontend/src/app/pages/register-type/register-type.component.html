@@ -1,0 +1,26 @@
+<div class="register-type-container">
+  <div class="register-type-card">
+    <h1>¿Qué tipo de usuario eres?</h1>
+    <p>Selecciona tu perfil para continuar</p>
+    
+    <div class="type-selection">
+      <div class="type-card cliente-card" (click)="selectType('cliente')">
+        <div class="icon">👤</div>
+        <h2>Cliente</h2>
+        <p>Accede a planes de nutrición personalizados</p>
+        <button class="btn btn-cliente">Soy Cliente</button>
+      </div>
+
+      <div class="type-card nutriologo-card" (click)="selectType('nutriologo')">
+        <div class="icon">🧑‍⚕️</div>
+        <h2>Nutriólogo</h2>
+        <p>Gestiona tus clientes y planes</p>
+        <button class="btn btn-nutriologo">Soy Nutriólogo</button>
+      </div>
+    </div>
+
+    <div class="back-link">
+      <p>¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión aquí</a></p>
+    </div>
+  </div>
+</div>
