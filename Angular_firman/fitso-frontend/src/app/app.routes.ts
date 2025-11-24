@@ -1,70 +1,79 @@
+// src/app/app.routes.ts
 import { Routes } from '@angular/router';
-import { HomeComponent } from './pages/home/home.component';
-import { RegisterComponent } from './pages/register/register.component';
-import { RegisterTypeComponent } from './pages/register-type/register-type.component';
-import { LoginComponent } from './pages/login/login.component';
-import { DashboardComponent } from './pages/dashboard/dashboard.component';
-import { ProfileClienteComponent } from './pages/profile-cliente/profile-cliente.component';
-import { ProgresoComponent } from './pages/progreso/progreso.component';
-import { NutriologoDashboardComponent } from './pages/nutriologo/nutriologo-dashboard.component';
-import { ProfileNutriologoComponent } from './pages/nutriologo/profile-nutriologo.component';
 import { AuthGuard, ClienteGuard, NutrioloGoGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
-  // Públicas
-  { path: '', component: HomeComponent, pathMatch: 'full' },
-  { path: 'register-type', component: RegisterTypeComponent },
-  { path: 'register', component: RegisterComponent },
-  { path: 'login', component: LoginComponent },
+  // ====== PÚBLICAS ======
+  {
+    path: '',
+    loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent),
+    pathMatch: 'full'
+  },
+  {
+    path: 'login',
+    loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent)
+  },
+  {
+    path: 'register-type',
+    loadComponent: () => import('./pages/register-type/register-type.component').then(m => m.RegisterTypeComponent)
+  },
+  {
+    path: 'register',
+    loadComponent: () => import('./pages/register/register.component').then(m => m.RegisterComponent)
+  },
 
-  // Cliente
+  // ====== CLIENTE ======
   {
     path: 'dashboard',
-    component: DashboardComponent,
-    canActivate: [AuthGuard, ClienteGuard],
+    loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent),
+    canActivate: [AuthGuard, ClienteGuard]
   },
   {
     path: 'profile/cliente',
-    component: ProfileClienteComponent,
-    canActivate: [AuthGuard, ClienteGuard],
+    loadComponent: () => import('./pages/profile-cliente/profile-cliente.component').then(m => m.ProfileClienteComponent),
+    canActivate: [AuthGuard, ClienteGuard]
   },
   {
     path: 'progreso',
-    component: ProgresoComponent,
-    canActivate: [AuthGuard, ClienteGuard],
+    loadComponent: () => import('./pages/progreso/progreso.component').then(m => m.ProgresoComponent),
+    canActivate: [AuthGuard, ClienteGuard]
   },
 
-  // Nutriólogo
+  // ====== NUTRIÓLOGO ======
   {
     path: 'nutriologo/dashboard',
-    component: NutriologoDashboardComponent,
-    canActivate: [AuthGuard, NutrioloGoGuard],
+    loadComponent: () => import('./pages/nutriologo/nutriologo-dashboard.component').then(m => m.NutriologoDashboardComponent),
+    canActivate: [AuthGuard, NutrioloGoGuard]
   },
   {
     path: 'profile/nutriologo',
-    component: ProfileNutriologoComponent,
-    canActivate: [AuthGuard, NutrioloGoGuard],
-  },
-  // compatibilidad con la ruta vieja por si quedó en algún lugar
-  {
-    path: 'dashboard/nutriologo',
-    pathMatch: 'full',
-    redirectTo: 'nutriologo/dashboard',
+    loadComponent: () => import('./pages/nutriologo/profile-nutriologo.component').then(m => m.ProfileNutriologoComponent),
+    canActivate: [AuthGuard, NutrioloGoGuard]
   },
 
+  // ====== CONTRATOS ======
   {
     path: 'nutriologos',
-    loadComponent: () => import('./pages/nutriologos-list/nutriologos-list.component')
-      .then(m => m.NutriologosListComponent)
+    loadComponent: () => import('./pages/nutriologos-list/nutriologos-list.component').then(m => m.NutriologosListComponent)
   },
   {
     path: 'nutriologos/:id',
-    loadComponent: () => import('./pages/nutriologo-detail/nutriologo-detail.component')
-      .then(m => m.NutriologoDetailComponent)
+    loadComponent: () => import('./pages/nutriologo/profile-nutriologo.component').then(m => m.ProfileNutriologoComponent)
+  },
+  {
+    path: 'pago-stripe/:id',
+    loadComponent: () => import('./pages/pago-stripe/pago-stripe.component').then(m => m.PagoStripeComponent),
+    canActivate: [AuthGuard, ClienteGuard]
   },
 
-  // ⬇️ SIEMPRE AL FINAL
-  { path: '**', redirectTo: '' },
-
-  
+  // ====== REDIRECCIONES ======
+  {
+    path: 'dashboard/nutriologo',
+    redirectTo: 'nutriologo/dashboard',
+    pathMatch: 'full'
+  },
+  {
+    path: '**',
+    redirectTo: ''
+  }
 ];

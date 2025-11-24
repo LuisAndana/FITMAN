@@ -1,0 +1,90 @@
+<!-- src/app/pages/pago-stripe/pago-stripe.component.html -->
+<div class="pago-container">
+  <div class="pago-card">
+    <h1>Procesar Pago</h1>
+
+    <div *ngIf="cargando" class="loading">
+      <p>Cargando información del pago...</p>
+    </div>
+
+    <div *ngIf="error && !cargando" class="error-message">
+      <p>{{ error }}</p>
+    </div>
+
+    <div *ngIf="contrato && !cargando" class="pago-content">
+      <!-- Resumen -->
+      <section class="resumen">
+        <h2>Resumen del Contrato</h2>
+        <div class="resumen-item">
+          <span>Nutriólogo:</span>
+          <span>{{ contrato.nutriologo_nombre }}</span>
+        </div>
+        <div class="resumen-item">
+          <span>Monto:</span>
+          <span>${{ contrato.monto }}</span>
+        </div>
+        <div class="resumen-item">
+          <span>Duración:</span>
+          <span>{{ contrato.duracion_meses }} mes{{ contrato.duracion_meses !== 1 ? 'es' : '' }}</span>
+        </div>
+        <div class="resumen-item total">
+          <span>Total:</span>
+          <span>${{ contrato.monto * contrato.duracion_meses }}</span>
+        </div>
+      </section>
+
+      <!-- Formulario de Stripe -->
+      <form [formGroup]="form" (ngSubmit)="procesarPago()" class="pago-form">
+        <div class="form-group">
+          <label>Información de la Tarjeta</label>
+          <div id="card-element" class="card-element"></div>
+          <div class="error-message" *ngIf="errorTarjeta">
+            {{ errorTarjeta }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="correo@example.com"
+            class="form-input"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="nombre">Nombre</label>
+          <input
+            id="nombre"
+            type="text"
+            formControlName="nombre"
+            placeholder="Tu nombre completo"
+            class="form-input"
+          />
+        </div>
+
+        <button 
+          type="submit" 
+          class="btn-pagar"
+          [disabled]="form.invalid || procesandoPago"
+        >
+          {{ procesandoPago ? 'Procesando...' : 'Pagar Ahora' }}
+        </button>
+      </form>
+
+      <!-- Mensaje de éxito -->
+      <div *ngIf="pagoExitoso" class="success-message">
+        <h3>✓ Pago Realizado</h3>
+        <p>Tu contrato ha sido activado exitosamente</p>
+        <button 
+          (click)="irAlDashboard()" 
+          class="btn-success"
+        >
+          Ir al Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
