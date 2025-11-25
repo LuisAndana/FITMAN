@@ -1,9 +1,3 @@
-# services/stripe_service.py
-# ===============================================
-# Servicio de Stripe para Pagos
-# COPIAR DIRECTAMENTE A: Backend/services/stripe_service.py
-# ===============================================
-
 import os
 import stripe
 from typing import Dict, Optional, Tuple
@@ -11,7 +5,8 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 
 from models.contrato import Contrato, EstadoContrato
-from models.user import Usuario
+from models.user import Usuario, TipoUsuarioEnum  # 🔥 Importante
+
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "sk_test_dummy")
 
@@ -32,10 +27,12 @@ class StripeService:
         Crea un PaymentIntent en Stripe y un registro de contrato pendiente.
         """
         try:
-            # Validar nutriólogo
+            # ✅ Validar que el nutriólogo existe y ES nutriólogo
+            from models.user import Usuario, TipoUsuarioEnum
+
             nutriologo = db.query(Usuario).filter(
                 Usuario.id_usuario == id_nutriologo,
-                Usuario.es_nutriologo == True
+                Usuario.tipo_usuario == TipoUsuarioEnum.nutriologo
             ).first()
 
             if not nutriologo:
@@ -51,7 +48,7 @@ class StripeService:
                 estado=EstadoContrato.PENDIENTE
             )
             db.add(contrato)
-            db.flush()
+            db.flush()  # obtiene ID sin commit
 
             # Crear PaymentIntent en Stripe
             payment_intent = stripe.PaymentIntent.create(
@@ -95,7 +92,7 @@ class StripeService:
         Confirma que el pago fue exitoso y activa el contrato.
         """
         try:
-            # Obtener PaymentIntent de Stripe
+            # Obtener PaymentIntent desde Stripe
             payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
 
             # Buscar contrato
@@ -106,11 +103,9 @@ class StripeService:
             if not contrato:
                 return False, {"error": "Contrato no encontrado"}
 
-            # Verificar pago exitoso
+            # Verificar que el pago fue exitoso
             if payment_intent.status != "succeeded":
-                return False, {
-                    "error": f"Pago no completado. Estado: {payment_intent.status}"
-                }
+                return False, {"error": f"Pago incompleto (Estado: {payment_intent.status})"}
 
             # Activar contrato
             ahora = datetime.utcnow()

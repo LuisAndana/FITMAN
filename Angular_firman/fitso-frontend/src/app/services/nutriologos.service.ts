@@ -3,9 +3,6 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 
-// ============================================
-// TIPOS/INTERFACES
-// ============================================
 export interface Nutriologo {
   id_usuario: number;
   nombre?: string;
@@ -21,6 +18,8 @@ export interface Nutriologo {
   es_nutriologo?: boolean;
   profesion?: string;
   numero_cedula_mask?: string;
+  numero_cedula?: string;
+  documento_url?: string;
 }
 
 export interface ListResponse<T = any> {
@@ -34,13 +33,12 @@ export interface ListResponse<T = any> {
 export class NutriologosService {
   private http = inject(HttpClient);
   
-  // ✅ URL BASE CORRECTA - Incluir /api
-  private base = 'http://127.0.0.1:8000/api';
+  // ✅ URL BASE - Solo el dominio, sin /api
+  private base = 'http://127.0.0.1:8000';
 
   /**
    * ✅ LISTA NUTRIÓLOGOS CON FILTROS Y PAGINACIÓN
-   * Endpoint correcto: GET /api/users/nutriologos
-   * (Sin /lista al final - ✅ CAMBIO IMPORTANTE)
+   * Ruta: GET /api/users/nutriologos
    */
   list(params: { 
     q?: string; 
@@ -57,7 +55,7 @@ export class NutriologosService {
     if (params.order) p = p.set('order', params.order);
     if (params.solo_validados !== undefined) p = p.set('solo_validados', String(params.solo_validados));
 
-    const url = `${this.base}/users/nutriologos`; // ✅ SIN /lista
+    const url = `${this.base}/api/users/nutriologos`;
     
     console.log('📡 GET', url);
     console.log('   Params:', { 
@@ -86,11 +84,11 @@ export class NutriologosService {
   }
 
   /**
-   * ✅ OBTENER NUTRIÓLOGO POR ID
-   * Endpoint: GET /api/users/{id}
+   * ✅ OBTENER NUTRIÓLOGO POR ID (LECTURA)
+   * Ruta: GET /api/users/{id}
    */
   getById(id: number): Observable<Nutriologo> {
-    const url = `${this.base}/users/${id}`;
+    const url = `${this.base}/api/users/${id}`;
     
     console.log('📡 GET', url);
 
@@ -101,12 +99,33 @@ export class NutriologosService {
         }),
         catchError((error) => {
           console.error('❌ Error al obtener nutriólogo:', error);
-          // Retornar un objeto con estructura mínima
           return of({
             id_usuario: id,
             nombre: 'Nutriólogo',
             validado: false
           } as Nutriologo);
+        })
+      );
+  }
+
+  /**
+   * ✅ ACTUALIZAR NUTRIÓLOGO POR ID (ESCRITURA)
+   * Ruta: PUT /api/users/{id}
+   */
+  update(id: number, data: Partial<Nutriologo>): Observable<Nutriologo> {
+    const url = `${this.base}/api/users/${id}`;
+    
+    console.log('📡 PUT', url);
+    console.log('   Datos:', data);
+
+    return this.http.put<Nutriologo>(url, data)
+      .pipe(
+        tap((response) => {
+          console.log('✅ Nutriólogo actualizado:', response.nombre || 'Sin nombre');
+        }),
+        catchError((error) => {
+          console.error('❌ Error al actualizar nutriólogo:', error);
+          throw error;
         })
       );
   }

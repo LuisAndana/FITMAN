@@ -23,7 +23,7 @@
         <div>
           <div class="title-row">
             <h1 class="title">{{ data.nombre || 'Nutriólogo' }}</h1>
-            <span *ngIf="data.validado" class="badge-ok">Validado</span>
+            <span *ngIf="data.validado" class="badge-ok">✓ Validado</span>
           </div>
           <p class="subtitle">
             {{ data.profesion || 'Profesión no especificada' }}
@@ -34,19 +34,32 @@
 
       <!-- Acciones -->
       <div class="cta-row">
+        <!-- 👉 BOTÓN PRINCIPAL: CONTRATAR -->
+        <button 
+          class="btn primary hire-btn" 
+          type="button" 
+          (click)="hireNutritionist()"
+          [disabled]="!userAuthenticated">
+          💳 Contratar Nutriólogo
+        </button>
+
+        <!-- Botones secundarios -->
         <a *ngIf="data.documento_url"
            class="btn ghost"
            [href]="data.documento_url"
            target="_blank" rel="noopener">
-          Ver documento
+          📄 Ver documento
         </a>
-        <button class="btn primary" type="button" (click)="requestAppointment()">
-          Agendar consulta
-        </button>
+        
         <button class="btn outline" type="button" (click)="sendMessage()">
-          Enviar mensaje
+          💬 Enviar mensaje
         </button>
       </div>
+
+      <!-- Aviso si no está autenticado -->
+      <p class="auth-hint" *ngIf="!userAuthenticated">
+        Debes <a routerLink="/login" class="link-highlight">iniciar sesión</a> para contratar un nutriólogo
+      </p>
     </div>
   </section>
 

@@ -15,9 +15,11 @@ from config.database import Base, engine
 
 # 🔹 Carga todos los modelos UNA sola vez (evita redefinir tablas)
 import models  # <- usa models/__init__.py
+from routers import users, auth, contratos
+
 
 # 🔹 Routers
-from routers import users, auth
+
 
 # ===============================================
 # Inicializar la aplicación
@@ -58,28 +60,25 @@ app.mount("/static/validaciones", StaticFiles(directory=UPLOAD_DIR), name="valid
 # ===============================================
 # Registrar rutas
 # ===============================================
-# auth.router ya trae prefix="/auth" en routers/auth.py
-app.include_router(auth.router)
-
-# users.router se expone bajo /users
-# MONTAR RUTAS DE USUARIOS CORRECTAMENTE
+app.include_router(auth.router, prefix="/api")
 app.include_router(users.router, prefix="/api/users")
+app.include_router(contratos.router, prefix="/api")
 
 
 
 # ===============================================
 # Puente /nutriologos/validacion  →  /users/nutriologos/validacion
 # ===============================================
-VALIDATION_TARGET = "/users/nutriologos/validacion"
+VALIDATION_TARGET = "/api/users/nutriologos/validacion"
+
 
 @app.api_route(
-    "/nutriologos/validacion",
+    "/api/nutriologos/validacion",
     methods=["GET", "POST", "DELETE"],
     include_in_schema=True,
     tags=["Validación Nutriólogo"],
 )
 async def nutri_validacion_bridge(request: Request):
-    # 307 mantiene método y cuerpo (necesario para POST multipart/form-data)
     return RedirectResponse(url=VALIDATION_TARGET, status_code=307)
 
 # ===============================================

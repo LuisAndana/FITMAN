@@ -13,18 +13,20 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  // ---------- Auth ----------
+  // ========================
+  //  🔐 AUTH
+  // ========================
   register(userData: any, tipo: 'cliente' | 'nutriologo' = 'cliente'): Observable<any> {
     const base = this.apiUrl.replace(/\/+$/, '');
-    const path = tipo === 'nutriologo' ? '/auth/register/nutriologo' : '/auth/register';
+    const path = tipo === 'nutriologo' ? '/api/auth/register/nutriologo' : '/api/auth/register';
     return this.http.post(`${base}${path}`, userData);
   }
 
   login(credentials: { correo: string; contrasena: string }): Observable<any> {
     const base = this.apiUrl.replace(/\/+$/, '');
-    return this.http.post(`${base}/auth/login`, credentials).pipe(
+    return this.http.post(`${base}/api/auth/login`, credentials).pipe(
       map((res: any) => {
-        const token = res?.access_token || res?.token || res?.jwt || null;
+        const token = res?.access_token || res?.token || null;
         if (!token) throw new Error('No se recibió token en la respuesta.');
         this.saveToken(token);
 
@@ -83,10 +85,12 @@ export class AuthService {
     });
   }
 
-  // ---------- Usuarios ----------
+  // ========================
+  //  👤 USUARIOS
+  // ========================
   getCurrentUser(): Observable<any> {
     const base = this.apiUrl.replace(/\/+$/, '');
-    return this.http.get(`${base}/auth/me`, { headers: this.getAuthHeaders() }).pipe(
+    return this.http.get(`${base}/api/auth/me`, { headers: this.getAuthHeaders() }).pipe(
       tap((me: any) => {
         const id  = me?.id_usuario ?? me?.id ?? null;
         const rol = me?.tipo_usuario ?? null;
@@ -101,57 +105,62 @@ export class AuthService {
 
   getUserById(id: string | number): Observable<any> {
     const base = this.apiUrl.replace(/\/+$/, '');
-    return this.http.get(`${base}/users/${id}`, { headers: this.getAuthHeaders() });
+    return this.http.get(`${base}/api/users/${id}`, { headers: this.getAuthHeaders() });
   }
 
   updateUser(id: string | number, data: any): Observable<any> {
     const base = this.apiUrl.replace(/\/+$/, '');
-    return this.http.put(`${base}/users/${id}`, data, { headers: this.getAuthHeaders() });
+    return this.http.put(`${base}/api/users/${id}`, data, { headers: this.getAuthHeaders() });
   }
 
-  // ---------- Catálogo de enfermedades ----------
+  // Catálogo de enfermedades
   getIllnessesCatalog(): Observable<string[]> {
     const base = this.apiUrl.replace(/\/+$/, '');
-    return this.http.get<string[]>(`${base}/users/illnesses`, { headers: this.getAuthHeaders() });
+    return this.http.get<string[]>(`${base}/api/users/illnesses`, { headers: this.getAuthHeaders() });
   }
 
-  // ---------- Progreso ----------
+  // Progreso usuario normal
   getUserProgress(id: string | number): Observable<any> {
     const base = this.apiUrl.replace(/\/+$/, '');
-    return this.http.get<any>(`${base}/users/${id}/progress`, { headers: this.getAuthHeaders() });
+    return this.http.get<any>(`${base}/api/users/${id}/progress`, { headers: this.getAuthHeaders() });
   }
 
-  // ---------- Nutriólogo ----------
+  // ==============================
+  //  🥗 NUTRIÓLOGO
+  // ==============================
   getNutriMe(): Observable<any> {
     const base = this.apiUrl.replace(/\/+$/, '');
-    return this.http.get(`${base}/nutriologos/me`, { headers: this.getAuthHeaders() });
+    return this.http.get(`${base}/api/nutriologos/me`, { headers: this.getAuthHeaders() });
   }
 
   getNutriClients(): Observable<any[]> {
     const base = this.apiUrl.replace(/\/+$/, '');
-    return this.http.get<any[]>(`${base}/nutriologos/clients`, { headers: this.getAuthHeaders() });
+    return this.http.get<any[]>(`${base}/api/nutriologos/clients`, { headers: this.getAuthHeaders() });
   }
 
   getClientProgress(id: string | number): Observable<any> {
     const base = this.apiUrl.replace(/\/+$/, '');
-    return this.http.get<any>(`${base}/nutriologos/clients/${id}/progress`, { headers: this.getAuthHeaders() });
+    return this.http.get<any>(`${base}/api/nutriologos/clients/${id}/progress`, { headers: this.getAuthHeaders() });
   }
 
-  // ---------- Validación de Nutriólogo: subir documento ----------
+  // ==============================
+  //  📄 Validación Nutriólogo
+  // ==============================
   uploadNutriDocumento(file: File): Observable<HttpEvent<any>> {
     const base = this.apiUrl.replace(/\/+$/, '');
     const form = new FormData();
-    form.append('archivo', file); // cambia a 'file' si tu backend lo espera así
+    form.append('archivo', file);
 
-    const token = this.getToken();
     const headers = new HttpHeaders({
-      Authorization: token ? `Bearer ${token}` : ''
+      Authorization: this.getToken() ? `Bearer ${this.getToken()}` : ''
     });
 
-    const req = new HttpRequest('POST', `${base}/nutriologos/validacion`, form, {
-      reportProgress: true,
-      headers
-    });
+    const req = new HttpRequest(
+      'POST',
+      `${base}/api/nutriologos/validacion`,
+      form,
+      { reportProgress: true, headers }
+    );
 
     return this.http.request(req);
   }

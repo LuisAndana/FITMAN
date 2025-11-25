@@ -18,7 +18,6 @@ interface Contrato {
   duracion_meses: number;
   descripcion_servicios?: string;
   nutriologo_nombre?: string;
-  cliente_nombre?: string;
 }
 
 @Component({
@@ -29,14 +28,16 @@ interface Contrato {
   styleUrls: ['./pago-stripe.component.css']
 })
 export class PagoStripeComponent implements OnInit, OnDestroy {
+
   form!: FormGroup;
   contrato: Contrato | null = null;
+
   cargando = true;
-  error: string | null = null;
-  errorTarjeta: string | null = null;
   procesandoPago = false;
   pagoExitoso = false;
-  
+  error: string | null = null;
+  errorTarjeta: string | null = null;
+
   private stripe: any;
   private elements: any;
   private cardElement: any;
@@ -49,7 +50,7 @@ export class PagoStripeComponent implements OnInit, OnDestroy {
     private contratoService: ContratoService
   ) {}
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       nombre: ['', [Validators.required, Validators.minLength(3)]]
@@ -60,36 +61,33 @@ export class PagoStripeComponent implements OnInit, OnDestroy {
   }
 
   cargarContrato() {
-    this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      const contratoId = params['id'];
-      
-      if (!contratoId) {
-        this.error = 'ID de contrato no proporcionado';
-        this.cargando = false;
-        return;
-      }
+    const nutriologoId = Number(this.route.snapshot.paramMap.get('id'));
+    const state = history.state;
 
-      this.contratoService.obtenerContrato(parseInt(contratoId))
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response: any) => {
-            this.contrato = response;
-            this.cargando = false;
-          },
-          error: (err: any) => {
-            this.error = 'Error al cargar el contrato';
-            this.cargando = false;
-          }
-        });
-    });
+    const monto = state?.precio || 0;
+    const descripcion = state?.descripcion || 'Plan nutricional mensual';
+
+    this.contrato = {
+      id_contrato: 0,
+      id_nutriologo: nutriologoId,
+      id_cliente: Number(localStorage.getItem('usuarioId')),
+      monto: monto,
+      duracion_meses: 1,
+      estado: 'pendiente',
+      descripcion_servicios: descripcion,
+      nutriologo_nombre: state?.nutriologo_nombre || 'Nutriólogo seleccionado'
+    };
+
+    this.cargando = false;
   }
 
   inicializarStripe() {
     const publicKey = (window as any).STRIPE_PUBLIC_KEY || 'pk_test_YOUR_KEY';
-    this.stripe = (window as any).Stripe(publicKey);
+    this.stripe = Stripe(publicKey);
+
     this.elements = this.stripe.elements();
     this.cardElement = this.elements.create('card');
-    
+
     setTimeout(() => {
       this.cardElement.mount('#card-element');
       this.cardElement.on('change', (event: any) => {
@@ -99,41 +97,40 @@ export class PagoStripeComponent implements OnInit, OnDestroy {
   }
 
   procesarPago() {
-    if (this.form.invalid || !this.contrato) return;
+    if (!this.contrato || this.form.invalid) return;
 
     this.procesandoPago = true;
-    this.errorTarjeta = null;
 
     this.contratoService.crearPaymentIntent(
       this.contrato.id_nutriologo,
       this.contrato.monto * this.contrato.duracion_meses,
       this.contrato.duracion_meses,
       this.contrato.descripcion_servicios
-    ).pipe(takeUntil(this.destroy$))
+    )
+    .pipe(takeUntil(this.destroy$))
     .subscribe({
-      next: (response: any) => {
-        if (response.exito && response.client_secret) {
-          const contratoId = response.contrato_id || 0;
-          this.confirmarPagoConStripe(response.client_secret, contratoId);
+      next: (resp) => {
+        if (resp.client_secret) {
+          this.confirmarPagoConStripe(resp.client_secret);
         } else {
-          this.error = response.mensaje || 'Error al procesar el pago';
+          this.error = resp.mensaje || 'Error desconocido';
           this.procesandoPago = false;
         }
       },
-      error: (err: any) => {
+      error: () => {
         this.error = 'Error al conectar con el servidor';
         this.procesandoPago = false;
       }
     });
   }
 
-  confirmarPagoConStripe(clientSecret: string, contratoId: number) {
+  confirmarPagoConStripe(clientSecret: string) {
     this.stripe.confirmCardPayment(clientSecret, {
       payment_method: {
         card: this.cardElement,
         billing_details: {
-          email: this.form.get('email')?.value,
-          name: this.form.get('nombre')?.value
+          email: this.form.value.email,
+          name: this.form.value.nombre
         }
       }
     }).then((result: any) => {
@@ -150,12 +147,12 @@ export class PagoStripeComponent implements OnInit, OnDestroy {
     this.contratoService.confirmarPago(paymentIntentId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response: any) => {
+        next: () => {
           this.pagoExitoso = true;
           this.procesandoPago = false;
         },
-        error: (err: any) => {
-          this.error = 'Error al confirmar el pago';
+        error: () => {
+          this.error = 'Error al confirmar pago';
           this.procesandoPago = false;
         }
       });
@@ -165,7 +162,7 @@ export class PagoStripeComponent implements OnInit, OnDestroy {
     this.router.navigate(['/dashboard']);
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }

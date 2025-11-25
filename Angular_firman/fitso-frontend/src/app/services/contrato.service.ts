@@ -12,9 +12,10 @@ interface PagoStripeRequest {
   monto: number;
   duracion_meses: number;
   descripcion_servicios?: string;
-  usuario_id?: number;
-  payment_method_id: string;
+  usuario_id: number;
 }
+
+
 
 interface PaymentIntentResponse {
   exito: boolean;
@@ -47,28 +48,31 @@ export class ContratoService {
    * Crea un PaymentIntent en Stripe
    */
   crearPaymentIntent(
-    idNutriologo: number,
-    monto: number,
-    duracionMeses: number = 1,
-    descripcion?: string
-  ): Observable<PaymentIntentResponse> {
-    // Obtener usuario_id del localStorage
-    const usuarioId = parseInt(localStorage.getItem('usuarioId') || '0', 10);
+  idNutriologo: number,
+  monto: number,
+  duracionMeses: number = 1,
+  descripcion?: string
+): Observable<PaymentIntentResponse> {
 
-    const payload: PagoStripeRequest = {
-      id_nutriologo: idNutriologo,
-      monto: monto,
-      duracion_meses: duracionMeses,
-      descripcion_servicios: descripcion,
-      usuario_id: usuarioId,
-      payment_method_id: "pm_temp"
-    };
+  const usuarioId = parseInt(localStorage.getItem('usuarioId') || '0', 10);
 
-    return this.http.post<PaymentIntentResponse>(
-      `${this.apiUrl}/crear-payment-intent`,
-      payload
-    );
-  }
+  const payload = {
+    id_nutriologo: idNutriologo,
+    monto: monto,
+    duracion_meses: duracionMeses,
+    descripcion_servicios: descripcion,
+    usuario_id: usuarioId
+  };
+
+  console.log("🚀 PAYLOAD ENVIADO AL BACKEND:", payload);
+
+  return this.http.post<PaymentIntentResponse>(
+    `${this.apiUrl}/crear-payment-intent`,
+    payload
+  );
+}
+
+
 
   /**
    * Confirma un pago exitoso

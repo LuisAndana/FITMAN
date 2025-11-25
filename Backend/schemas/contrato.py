@@ -1,20 +1,15 @@
-# schemas/contrato.py
-# ===============================================
-# Schemas Pydantic para Contratos
-# COPIAR A: Backend/schemas/contrato.py
-# ===============================================
-
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 
 
 class ContratoCrear(BaseModel):
-    """Schema para crear un nuevo contrato"""
+    """Schema para crear un nuevo contrato (si lo usaras directo)"""
     id_nutriologo: int = Field(..., description="ID del nutriólogo")
     monto: float = Field(..., gt=0, description="Monto a pagar en USD")
-    duracion_meses: int = Field(default=1, ge=1, le=12, description="Duración en meses")
+    duracion_meses: int = Field(default=1, ge=1, le=12)
     descripcion_servicios: Optional[str] = Field(None, max_length=1000)
+    moneda: str = "usd"
 
 
 class ContratoResponse(BaseModel):
@@ -23,7 +18,7 @@ class ContratoResponse(BaseModel):
     id_cliente: int
     id_nutriologo: int
     monto: float
-    moneda: str
+    moneda: Optional[str]
     duracion_meses: int
     estado: str
     descripcion_servicios: Optional[str]
@@ -38,16 +33,16 @@ class ContratoResponse(BaseModel):
 
 
 class PagoStripeRequest(BaseModel):
-    """Schema para procesar pago con Stripe"""
-    id_nutriologo: int = Field(..., description="ID del nutriólogo")
-    monto: float = Field(..., gt=0, description="Monto en USD")
-    duracion_meses: int = Field(default=1, ge=1, le=12)
+    id_nutriologo: int
+    monto: float
+    duracion_meses: int = 1
     descripcion_servicios: Optional[str] = None
-    payment_method_id: str = Field(..., description="Token de Stripe")
+    usuario_id: int
+
 
 
 class PagoStripeResponse(BaseModel):
-    """Schema para respuesta de pago"""
+    """Respuesta al frontend"""
     exito: bool
     mensaje: str
     contrato_id: Optional[int] = None

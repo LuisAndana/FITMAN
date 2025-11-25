@@ -57,9 +57,9 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/nutriologos-list/nutriologos-list.component').then(m => m.NutriologosListComponent)
   },
   {
-    path: 'nutriologos/:id',
-    loadComponent: () => import('./pages/nutriologo/profile-nutriologo.component').then(m => m.ProfileNutriologoComponent)
-  },
+  path: 'nutriologos/:id',
+  loadComponent: () => import('./pages/nutriologo-detail/nutriologo-detail.component').then(m => m.NutriologoDetailComponent)
+},
   {
     path: 'pago-stripe/:id',
     loadComponent: () => import('./pages/pago-stripe/pago-stripe.component').then(m => m.PagoStripeComponent),
