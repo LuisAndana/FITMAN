@@ -5,7 +5,7 @@
 # ===============================================
 
 import os
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -62,7 +62,10 @@ app.mount("/static/validaciones", StaticFiles(directory=UPLOAD_DIR), name="valid
 app.include_router(auth.router)
 
 # users.router se expone bajo /users
-app.include_router(users.router, prefix="/users", tags=["Usuarios"])
+# MONTAR RUTAS DE USUARIOS CORRECTAMENTE
+app.include_router(users.router, prefix="/api/users")
+
+
 
 # ===============================================
 # Puente /nutriologos/validacion  →  /users/nutriologos/validacion

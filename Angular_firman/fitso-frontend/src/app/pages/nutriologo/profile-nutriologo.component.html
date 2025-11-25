@@ -1,177 +1,126 @@
-<!-- src/app/pages/nutriologo/profile-nutriologo.component.html -->
-
-<div class="perfil-nutriologo-container">
+<div class="profile-cliente-container">
   <!-- Header -->
-  <header class="perfil-header">
-    <button class="btn-back" routerLink="/nutriologos">← Volver</button>
-    <h1>Perfil del Nutriólogo</h1>
+  <header class="profile-header">
+    <button class="btn-back" routerLink="/nutriologo/dashboard">← Volver</button>
+    <h1>Mi Perfil (Nutriólogo)</h1>
+    <button class="btn-edit" (click)="toggleEditMode()">
+      {{ editMode ? '✓ Guardar' : '✏️ Editar' }}
+    </button>
   </header>
 
-  <!-- Cargando -->
-  <div *ngIf="cargando" class="loading">
-    <div class="spinner"></div>
-    <p>Cargando información...</p>
-  </div>
+  <div class="profile-content">
+    <!-- INFORMACIÓN PROFESIONAL -->
+    <section class="profile-section">
+      <div class="section-header">
+        <h2>👤 Información Profesional</h2>
+      </div>
 
-  <!-- Error -->
-  <div *ngIf="error && !cargando" class="error-message">
-    <p>{{ error }}</p>
-  </div>
-
-  <!-- Contenido -->
-  <div *ngIf="nutriologo && !cargando" class="perfil-content">
-    <!-- Tarjeta principal -->
-    <section class="perfil-card">
-      <div class="perfil-header-section">
-        <div class="foto-container">
-          <img 
-            [src]="nutriologo.foto" 
-            [alt]="nutriologo.nombre" 
-            class="nutriologo-foto"
-            onerror="this.src='assets/default-avatar.jpg'"
-          />
-          <div *ngIf="nutriologo.validado" class="badge-validado">
-            ✓ Validado
-          </div>
+      <div class="profile-info-grid">
+        <div class="info-card">
+          <label>Nombre</label>
+          <input type="text" [(ngModel)]="usuario.nombre" [disabled]="!editMode" class="info-input" />
         </div>
 
-        <div class="info-principal">
-          <h2>{{ nutriologo.nombre }}</h2>
-          <p class="correo">{{ nutriologo.correo }}</p>
+        <div class="info-card">
+          <label>Correo</label>
+          <input type="email" [(ngModel)]="usuario.correo" disabled class="info-input disabled" />
+        </div>
 
-          <div class="experiencia-section">
-            <div class="exp-item">
-              <span class="exp-label">Experiencia:</span>
-              <span class="exp-value">{{ nutriologo.experiencia_anos }} años</span>
+        <div class="info-card">
+          <label>Profesión</label>
+          <input type="text" [(ngModel)]="usuario.profesion" [disabled]="!editMode" class="info-input" placeholder="Lic. en Nutrición" />
+        </div>
+
+        <div class="info-card">
+          <label>Número de cédula</label>
+          <input type="text" [(ngModel)]="usuario.numero_cedula" [disabled]="!editMode" class="info-input" placeholder="12-34-5678" />
+        </div>
+      </div>
+    </section>
+
+    <!-- ESTADO DE VALIDACIÓN -->
+    <section class="profile-section">
+      <div class="section-header">
+        <h2>✅ Estado de Validación</h2>
+      </div>
+
+      <div class="status-row">
+        <span
+          class="badge-state"
+          [class.validado]="usuario.validado"
+          [class.pendiente]="!usuario.validado">
+          {{ usuario.validado ? 'Validado' : 'Pendiente' }}
+        </span>
+
+        <p class="muted" *ngIf="!usuario.validado" style="margin-left:.75rem;">
+          Cuando subas tu cédula y sea verificada, tu cuenta aparecerá como validada.
+        </p>
+      </div>
+
+      <!-- SUBIR DOCUMENTO DE VALIDACIÓN -->
+      <div class="upload-card">
+        <div class="upload-head">
+          <h3>Subir documento que avale tu profesión</h3>
+          <span class="muted">Formatos permitidos: PDF, JPG, PNG — Máx. 10MB</span>
+        </div>
+
+        <label class="dropzone">
+          <input type="file"
+                 (change)="onFileSelected($event)"
+                 accept="application/pdf,image/png,image/jpeg"
+                 hidden />
+          <div class="dropzone-inner">
+            <div class="dz-icon">📄</div>
+            <div class="dz-text">
+              <strong>Haz clic para seleccionar</strong>
+              <span class="muted">o arrastra y suelta aquí</span>
             </div>
-            <div class="exp-item">
-              <span class="exp-label">Tarifa:</span>
-              <span class="exp-value">${{ nutriologo.precio_por_mes }}/mes</span>
-            </div>
           </div>
+        </label>
 
-          <button class="btn-contratar" (click)="abrirModalContrato()">
-            📝 Contratar Nutriólogo
-          </button>
+        <div class="file-row" *ngIf="archivoSeleccionado">
+          <div class="file-name">📎 {{ archivoNombre }}</div>
+          <div class="file-actions">
+            <button class="btn-ghost" type="button" (click)="cancelarSeleccion()">Cancelar</button>
+            <button class="btn-primary" type="button" (click)="subirDocumento()" [disabled]="subiendo">Subir</button>
+          </div>
         </div>
+
+        <div class="progress" *ngIf="subiendo || (subidaProgreso>0 && subidaProgreso<100)">
+          <div class="bar" [style.width.%]="subidaProgreso"></div>
+          <span>{{ subidaProgreso }}%</span>
+        </div>
+
+        <p class="upload-msg" *ngIf="subidaMensaje">{{ subidaMensaje }}</p>
+
+        <!-- Mostrar link si ya existe un documento cargado -->
+        <div class="prev-doc" *ngIf="usuario?.documento_url">
+          <a [href]="usuario.documento_url" target="_blank" rel="noopener">Ver documento cargado</a>
+        </div>
+      </div>
+      <!-- /SUBIR DOCUMENTO -->
+    </section>
+
+    <!-- TIPO DE CUENTA -->
+    <section class="profile-section">
+      <div class="section-header">
+        <h2>👥 Tipo de Cuenta</h2>
+      </div>
+
+      <div class="user-type-badge nutriologo">
+        <span class="badge-icon">🧑‍⚕️</span>
+        <span class="badge-text">NUTRIÓLOGO</span>
+      </div>
+
+      <p class="user-type-description">
+        Esta cuenta permite gestionar clientes, crear y asignar planes de nutrición, y revisar su progreso.
+      </p>
+
+      <div class="acciones-perfil" style="margin-top:1rem;">
+        <a class="btn-action" [routerLink]="['/nutriologo/dashboard']">👥 Ver mis clientes</a>
       </div>
     </section>
 
-    <!-- Descripción -->
-    <section class="seccion">
-      <h3>Acerca de</h3>
-      <p class="descripcion">{{ nutriologo.descripcion }}</p>
-    </section>
-
-    <!-- Especialidades -->
-    <section 
-      class="seccion" 
-      *ngIf="nutriologo.especialidades && nutriologo.especialidades.length > 0"
-    >
-      <h3>Especialidades</h3>
-      <div class="especialidades-grid">
-        <div 
-          *ngFor="let esp of nutriologo.especialidades" 
-          class="especialidad-tag"
-        >
-          {{ esp }}
-        </div>
-      </div>
-    </section>
-
-    <!-- Certificaciones -->
-    <section 
-      class="seccion" 
-      *ngIf="nutriologo.certificaciones && nutriologo.certificaciones.length > 0"
-    >
-      <h3>Certificaciones</h3>
-      <ul class="certificaciones-list">
-        <li *ngFor="let cert of nutriologo.certificaciones">{{ cert }}</li>
-      </ul>
-    </section>
-  </div>
-
-  <!-- Modal de Contratación -->
-  <div *ngIf="mostrarModalContrato" class="modal-overlay" (click)="cerrarModal()">
-    <div class="modal-contrato" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Contratar a {{ nutriologo?.nombre }}</h2>
-        <button class="close-btn" (click)="cerrarModal()" aria-label="Cerrar modal">✕</button>
-      </div>
-
-      <div class="modal-body">
-        <!-- Información del nutriólogo -->
-        <div class="info-box">
-          <p><strong>Nutriólogo:</strong> {{ nutriologo?.nombre }}</p>
-          <p><strong>Tarifa base:</strong> ${{ nutriologo?.precio_por_mes }}/mes</p>
-        </div>
-
-        <!-- Selección de duración -->
-        <div class="form-group">
-          <label for="duracion">Duración del contrato (meses):</label>
-          <div class="duracion-options">
-            <button
-              *ngFor="let mes of [1, 3, 6, 12]"
-              [id]="'duracion-' + mes"
-              [class.active]="duracionMeses === mes"
-              (click)="duracionMeses = mes"
-              class="duracion-btn"
-              type="button"
-            >
-              {{ mes }} mes{{ mes !== 1 ? 'es' : '' }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Descripción (opcional) -->
-        <div class="form-group">
-          <label for="descripcion">Descripción de servicios (opcional):</label>
-          <textarea
-            id="descripcion"
-            [(ngModel)]="descripcion"
-            placeholder="Ej: Quiero ayuda con dieta para pérdida de peso"
-            class="textarea-descripcion"
-            maxlength="500"
-          ></textarea>
-          <small style="color: var(--text-secondary);">{{ descripcion.length }}/500</small>
-        </div>
-
-        <!-- Resumen de pago -->
-        <div class="resumen-pago">
-          <div class="resumen-item">
-            <span>Precio por mes:</span>
-            <span>${{ nutriologo?.precio_por_mes }}</span>
-          </div>
-          <div class="resumen-item">
-            <span>Duración:</span>
-            <span>{{ duracionMeses }} mes{{ duracionMeses !== 1 ? 'es' : '' }}</span>
-          </div>
-          <div class="resumen-item total">
-            <span>Total a pagar:</span>
-            <span>${{ calcularPrecioTotal() }}</span>
-          </div>
-        </div>
-
-        <!-- Botones de acción -->
-        <div class="modal-actions">
-          <button 
-            class="btn-cancelar" 
-            (click)="cerrarModal()"
-            [disabled]="procesandoPago"
-            type="button"
-          >
-            Cancelar
-          </button>
-          <button 
-            class="btn-pagar" 
-            (click)="procesarPago()"
-            [disabled]="procesandoPago"
-            type="button"
-          >
-            {{ procesandoPago ? 'Procesando...' : 'Proceder al Pago' }}
-          </button>
-        </div>
-      </div>
-    </div>
+    <div class="message" *ngIf="mensaje">{{ mensaje }}</div>
   </div>
 </div>

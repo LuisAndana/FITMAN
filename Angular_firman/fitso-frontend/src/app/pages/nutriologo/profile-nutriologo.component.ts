@@ -1,15 +1,19 @@
 // src/app/pages/nutriologo/profile-nutriologo.component.ts
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule, ActivatedRoute, Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { HttpEvent, HttpEventType } from '@angular/common/http';
 
-import { ContratoService } from '../../services/contrato.service';
-import { NutriologosService, type Nutriologo } from '../../services/nutriologos.service';
-
-interface NutriPerfil extends Nutriologo {
-  // Hereda todas las propiedades de Nutriologo
+interface NutriPerfil {
+  id_usuario?: number;
+  nombre: string;
+  correo: string;
+  profesion: string | null;
+  numero_cedula: string | null;
+  validado: boolean;
+  documento_url?: string; // <-- agregado
 }
 
 @Component({
@@ -19,139 +23,198 @@ interface NutriPerfil extends Nutriologo {
   templateUrl: './profile-nutriologo.component.html',
   styleUrls: ['./profile-nutriologo.component.css']
 })
-export class ProfileNutriologoComponent implements OnInit, OnDestroy {
-  nutriologo: NutriPerfil | null = null;
-  cargando = true;
-  error: string | null = null;
-  mostrarModalContrato = false;
-  duracionMeses = 1;
-  descripcion = '';
-  procesandoPago = false;
+export class ProfileNutriologoComponent implements OnInit {
+  editMode = false;
+  cargando = false;
+  mensaje = '';
 
-  private destroy$ = new Subject<void>();
+  // Perfil
+  usuario: NutriPerfil = {
+    nombre: '',
+    correo: '',
+    profesion: null,
+    numero_cedula: null,
+    validado: false
+  };
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private contratoService: ContratoService,
-    private nutriologosService: NutriologosService
-  ) {}
+  // Subida de documento de validación
+  archivoSeleccionado: File | null = null;
+  archivoNombre = '';
+  subidaProgreso = 0;
+  subidaMensaje = '';
+  subiendo = false;
+
+  constructor(private auth: AuthService, private router: Router) {}
 
   ngOnInit(): void {
-    this.cargarPerfil();
+    this.cargar();
   }
 
-  cargarPerfil(): void {
+  /** Carga el perfil. Si no hay usuarioId en localStorage, hace fallback a /auth/me */
+  private cargar(): void {
+    const idLocal = localStorage.getItem('usuarioId');
+
+    const cargarPorId = (id: string | number) => {
+      this.cargando = true;
+      this.auth.getUserById(id).subscribe({
+        next: (u) => {
+          this.usuario = {
+            id_usuario: u?.id_usuario ?? u?.id,
+            nombre: u?.nombre ?? '',
+            correo: u?.correo ?? '',
+            profesion: u?.profesion ?? null,
+            numero_cedula: u?.numero_cedula ?? null,
+            validado: !!u?.validado,
+            documento_url: u?.documento_url ?? this.usuario.documento_url
+          };
+          this.cargando = false;
+        },
+        error: (err: any) => {
+          console.error(err);
+          this.mensaje = err?.error?.detail || 'No se pudo cargar el perfil.';
+          this.cargando = false;
+        }
+      });
+    };
+
+    if (idLocal) {
+      cargarPorId(idLocal);
+      return;
+    }
+
+    // Fallback: obtener /auth/me y luego cargar por id
     this.cargando = true;
-    this.error = null;
-
-    this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      const idNutriologo = params['id'];
-      
-      if (!idNutriologo) {
-        this.error = 'ID de nutriólogo no proporcionado';
+    this.auth.getCurrentUser().subscribe({
+      next: (me: any) => {
+        const id = me?.id_usuario ?? me?.id ?? null;
+        if (id != null) {
+          localStorage.setItem('usuarioId', String(id));
+          if (me?.tipo_usuario) localStorage.setItem('tipoUsuario', me.tipo_usuario);
+          if (me?.correo) localStorage.setItem('correoUsuario', me.correo);
+          cargarPorId(id);
+        } else {
+          this.cargando = false;
+          this.router.navigateByUrl('/login');
+        }
+      },
+      error: () => {
         this.cargando = false;
-        return;
+        this.router.navigateByUrl('/login');
       }
-
-      const id = parseInt(idNutriologo, 10);
-
-      this.nutriologosService.getById(id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response: any) => {
-            this.nutriologo = {
-              id_usuario: response.id_usuario || id,
-              nombre: response.nombre || 'Nutriólogo',
-              correo: response.correo || response.email || 'sin-email@example.com',
-              email: response.email || response.correo,
-              foto: response.foto || 'assets/default-avatar.jpg',
-              validado: response.validado || false,
-              descripcion: response.descripcion || 'Especialista en nutrición',
-              experiencia_anos: response.experiencia_anos || 0,
-              precio_por_mes: response.precio_por_mes || 100,
-              especialidades: Array.isArray(response.especialidades) ? response.especialidades : [],
-              certificaciones: Array.isArray(response.certificaciones) ? response.certificaciones : [],
-              es_nutriologo: response.es_nutriologo !== false
-            };
-            this.cargando = false;
-          },
-          error: (err: any) => {
-            console.error('Error al cargar nutriólogo:', err);
-            this.error = 'Error al cargar el perfil del nutriólogo';
-            this.cargando = false;
-          }
-        });
     });
   }
 
-  abrirModalContrato(): void {
-    const usuarioId = localStorage.getItem('usuarioId');
-    if (!usuarioId) {
-      this.error = 'Debes iniciar sesión para contratar';
+  toggleEditMode(): void {
+    this.editMode = !this.editMode;
+    if (!this.editMode) this.guardar();
+  }
+
+  guardar(): void {
+    const id = this.usuario.id_usuario || localStorage.getItem('usuarioId');
+    if (!id) return;
+
+    const payload = {
+      nombre: this.usuario.nombre,
+      profesion: this.usuario.profesion,
+      numero_cedula: this.usuario.numero_cedula,
+    };
+
+    this.auth.updateUser(id, payload).subscribe({
+      next: (u: any) => {
+        // Merge por si el backend devuelve campos distintos
+        this.usuario = {
+          ...this.usuario,
+          id_usuario: u?.id_usuario ?? this.usuario.id_usuario,
+          nombre: u?.nombre ?? this.usuario.nombre,
+          correo: u?.correo ?? this.usuario.correo,
+          profesion: u?.profesion ?? this.usuario.profesion,
+          numero_cedula: u?.numero_cedula ?? this.usuario.numero_cedula,
+          validado: u?.validado ?? this.usuario.validado,
+          documento_url: u?.documento_url ?? this.usuario.documento_url
+        };
+        this.mensaje = 'Cambios guardados.';
+      },
+      error: (err: any) => {
+        console.error(err);
+        this.mensaje = err?.error?.detail || 'No se pudieron guardar los cambios.';
+      }
+    });
+  }
+
+  // ============================
+  //  Subida de documento aval
+  // ============================
+
+  onFileSelected(ev: Event): void {
+    const input = ev.target as HTMLInputElement;
+    if (!input.files || !input.files.length) return;
+
+    const file = input.files[0];
+
+    // Validaciones simples
+    const okType = /^(application\/pdf|image\/(png|jpeg|jpg))$/i.test(file.type);
+    const okSize = file.size <= 10 * 1024 * 1024; // 10MB
+
+    if (!okType) {
+      this.subidaMensaje = 'Formato no permitido. Sube PDF, JPG o PNG.';
+      this.archivoSeleccionado = null;
+      this.archivoNombre = '';
+      return;
+    }
+    if (!okSize) {
+      this.subidaMensaje = 'El archivo supera 10 MB.';
+      this.archivoSeleccionado = null;
+      this.archivoNombre = '';
       return;
     }
 
-    this.mostrarModalContrato = true;
-    this.duracionMeses = 1;
-    this.descripcion = '';
-    this.error = null;
+    this.archivoSeleccionado = file;
+    this.archivoNombre = file.name;
+    this.subidaMensaje = '';
+    this.subidaProgreso = 0;
   }
 
-  cerrarModal(): void {
-    this.mostrarModalContrato = false;
-    this.descripcion = '';
-    this.duracionMeses = 1;
-    this.procesandoPago = false;
-  }
-
-  calcularPrecioTotal(): number {
-    if (!this.nutriologo) return 0;
-    return this.nutriologo.precio_por_mes * this.duracionMeses;
-  }
-
-  procesarPago(): void {
-    if (!this.nutriologo || !this.duracionMeses) {
-      this.error = 'Completa todos los campos';
+  subirDocumento(): void {
+    if (!this.archivoSeleccionado) {
+      this.subidaMensaje = 'Selecciona un archivo antes de subir.';
       return;
     }
+    this.subiendo = true;
+    this.subidaProgreso = 0;
+    this.subidaMensaje = '';
 
-    const usuarioId = localStorage.getItem('usuarioId');
-    if (!usuarioId) {
-      this.error = 'Debes iniciar sesión para contratar';
-      return;
-    }
+    this.auth.uploadNutriDocumento(this.archivoSeleccionado).subscribe({
+      next: (event: HttpEvent<any>) => {
+        if (event.type === HttpEventType.UploadProgress) {
+          const loaded = (event as any).loaded as number | undefined;
+          const total  = (event as any).total  as number | undefined;
+          if (loaded && total) {
+            this.subidaProgreso = Math.round(100 * loaded / total);
+          }
+        } else if (event.type === HttpEventType.Response) {
+          const body: any = (event as any).body;
+          if (body?.validado !== undefined) this.usuario.validado = !!body.validado;
+          if (body?.documento_url) this.usuario.documento_url = body.documento_url;
 
-    this.procesandoPago = true;
-    this.error = null;
-    const monto = this.calcularPrecioTotal();
-
-    this.contratoService.crearPaymentIntent(
-      this.nutriologo.id_usuario,
-      monto,
-      this.duracionMeses,
-      this.descripcion
-    ).pipe(takeUntil(this.destroy$))
-    .subscribe({
-      next: (response: any) => {
-        if (response.exito && response.contrato_id) {
-          this.cerrarModal();
-          this.router.navigate(['/pago-stripe', response.contrato_id]);
-        } else {
-          this.error = response.mensaje || 'Error al crear el contrato';
-          this.procesandoPago = false;
+          this.subiendo = false;
+          this.subidaMensaje = 'Documento enviado. Quedará pendiente hasta validación.';
+          this.archivoSeleccionado = null;
+          this.archivoNombre = '';
+          this.subidaProgreso = 100;
         }
       },
       error: (err: any) => {
-        console.error('Error:', err);
-        this.error = err.error?.detail || err.error?.mensaje || 'Error al procesar la solicitud';
-        this.procesandoPago = false;
+        console.error(err);
+        this.subiendo = false;
+        this.subidaMensaje = err?.error?.detail || 'No se pudo subir el documento.';
       }
     });
   }
 
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
+  cancelarSeleccion(): void {
+    this.archivoSeleccionado = null;
+    this.archivoNombre = '';
+    this.subidaProgreso = 0;
+    this.subidaMensaje = '';
   }
 }
