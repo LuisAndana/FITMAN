@@ -63,7 +63,7 @@ from config.database import Base, engine
 
 # 🔹 Carga todos los modelos UNA sola vez (evita redefinir tablas)
 import models  # <- usa models/__init__.py
-from routers import users, auth, contratos
+from routers import users, auth, contratos, clientes
 
 
 # 🔹 Routers
@@ -108,10 +108,24 @@ app.mount("/static/validaciones", StaticFiles(directory=UPLOAD_DIR), name="valid
 # ===============================================
 # Registrar rutas
 # ===============================================
+# ⚠️ IMPORTANTE: auth.router NO lleva prefijo /api/auth
+# porque ya tiene las rutas internas como /login, /register
+# Se registra con /api para que las rutas sean /api/login, /api/register
 app.include_router(auth.router, prefix="/api")
-app.include_router(users.router, prefix="/api/users")
-app.include_router(contratos.router, prefix="/api")
 
+# users.router: SE REGISTRA COMO /api/users (NO /api/usuarios)
+# porque el frontend usa /api/users en auth.service.ts
+app.include_router(users.router, prefix="/api/users")
+
+
+# clientes.router: Se registra como /api/clientes
+
+app.include_router(clientes.router)
+
+
+
+# contratos.router: NO lleva prefijo porque probablemente ya lo especifica
+app.include_router(contratos.router, prefix="/api")
 
 
 # ===============================================
@@ -139,5 +153,11 @@ def root():
         "message": "🚀 FitSo API funcionando correctamente",
         "version": "1.0.0",
     }
+
+@app.middleware("http")
+async def debug_auth(request, call_next):
+    print("🛰️ HEADER AUTH:", request.headers.get("authorization"))
+    return await call_next(request)
+
 
 # Ejecuta: uvicorn main:app --reload --port 8000

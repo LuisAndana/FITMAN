@@ -26,7 +26,15 @@ export class AuthService {
     const base = this.apiUrl.replace(/\/+$/, '');
     return this.http.post(`${base}/api/auth/login`, credentials).pipe(
       map((res: any) => {
-        const token = res?.access_token || res?.token || null;
+        const token =
+          res?.access_token ??
+          res?.token ??
+          res?.accessToken ??
+          res?.jwt ??
+          res?.data?.token ??
+          res?.data?.access_token ??
+          null;
+
         if (!token) throw new Error('No se recibió token en la respuesta.');
         this.saveToken(token);
 
@@ -126,26 +134,44 @@ export class AuthService {
   }
 
   // ==============================
-  //  🥗 NUTRIÓLOGO
+  //  🥗 NUTRIÓLOGO - RUTAS CORREGIDAS
   // ==============================
+  
+  /**
+   * Obtiene información del nutriólogo actual
+   * GET /api/users/me
+   */
   getNutriMe(): Observable<any> {
     const base = this.apiUrl.replace(/\/+$/, '');
-    return this.http.get(`${base}/api/nutriologos/me`, { headers: this.getAuthHeaders() });
+    return this.http.get(`${base}/api/users/me`, { headers: this.getAuthHeaders() });
   }
 
+  /**
+   * Obtiene lista de clientes del nutriólogo actual
+   * GET /api/clientes/mis-clientes
+   */
   getNutriClients(): Observable<any[]> {
     const base = this.apiUrl.replace(/\/+$/, '');
-    return this.http.get<any[]>(`${base}/api/nutriologos/clients`, { headers: this.getAuthHeaders() });
+    return this.http.get<any[]>(`${base}/api/clientes/mis-clientes`, { headers: this.getAuthHeaders() });
   }
 
+  /**
+   * Obtiene el progreso de un cliente específico
+   * GET /api/users/{id}/progress
+   */
   getClientProgress(id: string | number): Observable<any> {
     const base = this.apiUrl.replace(/\/+$/, '');
-    return this.http.get<any>(`${base}/api/nutriologos/clients/${id}/progress`, { headers: this.getAuthHeaders() });
+    return this.http.get<any>(`${base}/api/users/${id}/progress`, { headers: this.getAuthHeaders() });
   }
 
   // ==============================
   //  📄 Validación Nutriólogo
   // ==============================
+  
+  /**
+   * Sube documento de validación del nutriólogo
+   * POST /api/users/validacion
+   */
   uploadNutriDocumento(file: File): Observable<HttpEvent<any>> {
     const base = this.apiUrl.replace(/\/+$/, '');
     const form = new FormData();
@@ -157,7 +183,7 @@ export class AuthService {
 
     const req = new HttpRequest(
       'POST',
-      `${base}/api/nutriologos/validacion`,
+      `${base}/api/users/validacion`,
       form,
       { reportProgress: true, headers }
     );

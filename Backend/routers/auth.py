@@ -1,4 +1,6 @@
 # routers/auth.py
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from config.database import SessionLocal
@@ -10,6 +12,8 @@ from schemas.user_schema import (
     UsuarioResponse
 )
 from services.auth_service import verify_password, create_access_token, hash_password
+logger = logging.getLogger("auth")
+logger.setLevel(logging.INFO)
 
 router = APIRouter(
     prefix="/auth",
@@ -111,7 +115,8 @@ def login(credenciales: UsuarioLogin, db: Session = Depends(get_db)):
     if not usuario or not verify_password(credenciales.contrasena, usuario.contrasena):
         raise HTTPException(401, "Credenciales incorrectas")
 
-    token = create_access_token({"sub": usuario.correo})
+    # 👉 EL CAMBIO IMPORTANTE
+    token = create_access_token({"sub": usuario.id_usuario})
 
     return {
         "access_token": token,

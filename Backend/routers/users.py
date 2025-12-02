@@ -615,3 +615,24 @@ def get_user_progress(user_id: int, db: DbDep):
         peso_series=[float(x) for x in peso_series],
         imc_series=[float(x) for x in imc_series],
     )
+
+
+@router.get("/me", response_model=dict)
+def get_current_user_info(
+        db: DbDep,
+        user: UserDep
+):
+    """
+    Obtiene la información del usuario actual (autenticado)
+    GET /api/usuarios/me o /api/users/me
+
+    Retorna los datos del usuario desde el token JWT
+    """
+    db_user = db.query(Usuario).filter(
+        Usuario.id_usuario == (getattr(user, "id_usuario", None) or getattr(user, "id", None))
+    ).first()
+
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    return _to_dict(db_user)

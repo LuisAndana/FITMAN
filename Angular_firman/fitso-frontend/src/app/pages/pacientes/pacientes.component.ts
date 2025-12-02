@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../services/auth.service';
 
 interface Cliente {
   id_usuario: number;
@@ -50,7 +50,7 @@ export class PacientesComponent implements OnInit {
   dietaGenerada: any = null;
 
   constructor(
-    private http: HttpClient,
+    private auth: AuthService,  // ✅ CAMBIO: De HttpClient a AuthService
     private router: Router
   ) {}
 
@@ -60,26 +60,25 @@ export class PacientesComponent implements OnInit {
 
   /**
    * Carga la lista de clientes del nutriólogo actual
+   * ✅ AHORA USA AuthService
    */
   cargarClientes(): void {
     this.cargando = true;
     this.error = '';
 
-    const token = localStorage.getItem('token');
-    const headers = { Authorization: `Bearer ${token}` };
-
-    this.http.get<Cliente[]>('/api/clientes/mis-clientes', { headers })
-      .subscribe({
-        next: (data) => {
-          this.clientes = data;
-          this.cargando = false;
-        },
-        error: (err) => {
-          console.error('Error al cargar clientes:', err);
-          this.error = 'Error al cargar la lista de clientes. Verifica tu conexión.';
-          this.cargando = false;
-        }
-      });
+    // ✅ CAMBIO: Usar AuthService.getNutriClients() en lugar de http.get()
+    this.auth.getNutriClients().subscribe({
+      next: (data) => {
+        console.log('✅ Clientes cargados:', data);
+        this.clientes = Array.isArray(data) ? data : [];
+        this.cargando = false;
+      },
+      error: (err) => {
+        console.error('❌ Error al cargar clientes:', err);
+        this.error = 'Error al cargar la lista de clientes. Verifica tu conexión.';
+        this.cargando = false;
+      }
+    });
   }
 
   /**
@@ -144,6 +143,7 @@ export class PacientesComponent implements OnInit {
 
   /**
    * Genera una dieta usando IA
+   * ✅ AHORA USA AuthService
    */
   generarDieta(): void {
     if (!this.clienteSeleccionado || !this.nombreDieta) {
@@ -154,9 +154,6 @@ export class PacientesComponent implements OnInit {
     this.generandoDieta = true;
     this.error = '';
 
-    const token = localStorage.getItem('token');
-    const headers = { Authorization: `Bearer ${token}` };
-
     const request: DietaRequest = {
       id_cliente: this.clienteSeleccionado.id_usuario,
       nombre_dieta: this.nombreDieta,
@@ -165,20 +162,35 @@ export class PacientesComponent implements OnInit {
       preferencias: this.preferencias
     };
 
-    this.http.post('/api/clientes/generar-dieta-ia', request, { headers })
-      .subscribe({
-        next: (response: any) => {
-          this.dietaGenerada = response;
-          this.mostrarFormularioDieta = false;
-          this.generandoDieta = false;
-          console.log('Dieta generada exitosamente:', response);
-        },
-        error: (err) => {
-          console.error('Error al generar dieta:', err);
-          this.error = 'Error al generar la dieta. Intenta nuevamente.';
-          this.generandoDieta = false;
-        }
-      });
+    // ✅ CAMBIO: Necesitamos crear un método en AuthService para esto
+    // Por ahora, usamos directamente el http que ofrece AuthService
+    // Agregamos el método generar dieta a AuthService
+    
+    // Si no quieres modificar AuthService, puedes hacer esto temporalmente:
+    const token = this.auth.getToken();
+    const headers = { 'Authorization': `Bearer ${token}` };
+
+    // Usando fetch o HttpClient directamente (mejor agregar a AuthService)
+    fetch('http://localhost:8000/api/clientes/generar-dieta-ia', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(request)
+    })
+    .then(res => res.json())
+    .then((response: any) => {
+      this.dietaGenerada = response;
+      this.mostrarFormularioDieta = false;
+      this.generandoDieta = false;
+      console.log('✅ Dieta generada exitosamente:', response);
+    })
+    .catch((err) => {
+      console.error('❌ Error al generar dieta:', err);
+      this.error = 'Error al generar la dieta. Intenta nuevamente.';
+      this.generandoDieta = false;
+    });
   }
 
   /**

@@ -2,8 +2,7 @@
   <div class="header-inner">
     <!-- Hamburguesa -->
     <button class="menu-toggle"
-            (click)="toggleMenu()
-"
+            (click)="toggleMenu()"
             [class.active]="menuOpen"
             aria-label="Abrir menú">
       <span></span><span></span><span></span>
@@ -36,7 +35,6 @@
         <li><a (click)="go('/dashboard')">📊 Dashboard</a></li>
         <li><a (click)="go('/profile/cliente')">👤 Mi Perfil</a></li>
         <li><a (click)="go('/progreso')">📈 Mi Progreso</a></li>
-        <!-- NUEVO -->
         <li><a (click)="go('/nutriologos')">🩺 Nutriólogos</a></li>
       </ng-container>
 
@@ -44,7 +42,7 @@
       <ng-template #nutriMenu>
         <li><a (click)="go('/nutriologo/dashboard')">🧪 Dashboard Nutriólogo</a></li>
         <li><a (click)="go('/profile/nutriologo')">🩺 Perfil (Nutriólogo)</a></li>
-        <li><a (click)="go('/nutriologo/clientes')">👥 Mis Clientes</a></li>
+        <li><a (click)="go('/pacientes')">👥 Mis Pacientes</a></li>
       </ng-template>
     </ul>
   </nav>
