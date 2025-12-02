@@ -1,0 +1,268 @@
+<div class="pacientes-container">
+  <!-- Header -->
+  <div class="header">
+    <h1>🏥 Mis Pacientes</h1>
+    <p class="subtitle">Gestiona tus clientes y crea dietas personalizadas</p>
+  </div>
+
+  <!-- Estado de carga -->
+  <div *ngIf="cargando" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando pacientes...</p>
+  </div>
+
+  <!-- Mensaje de error -->
+  <div *ngIf="error && !cargando" class="error-banner">
+    <span>⚠️ {{ error }}</span>
+    <button (click)="cargarClientes()" class="retry-btn">Reintentar</button>
+  </div>
+
+  <!-- Lista de clientes -->
+  <div *ngIf="!cargando && clientes.length > 0" class="clientes-grid">
+    <div 
+      *ngFor="let cliente of clientes" 
+      class="cliente-card"
+      (click)="abrirPerfilCliente(cliente)"
+      [class.selected]="clienteSeleccionado?.id_usuario === cliente.id_usuario"
+    >
+      <div class="cliente-header">
+        <div class="avatar">{{ cliente.nombre.charAt(0).toUpperCase() }}</div>
+        <div class="cliente-info">
+          <h3>{{ cliente.nombre }}</h3>
+          <p class="objetivo">{{ formatearObjetivo(cliente.objetivo) }}</p>
+        </div>
+      </div>
+      
+      <div class="cliente-stats">
+        <div class="stat">
+          <span class="label">Edad</span>
+          <span class="value">{{ cliente.edad || 'N/A' }}</span>
+        </div>
+        <div class="stat">
+          <span class="label">Peso</span>
+          <span class="value">{{ cliente.peso || 'N/A' }} kg</span>
+        </div>
+        <div class="stat">
+          <span class="label">Altura</span>
+          <span class="value">{{ cliente.altura || 'N/A' }} m</span>
+        </div>
+      </div>
+
+      <div class="cliente-status">
+        <span class="badge" [class]="'badge-' + cliente.contrato_estado?.toLowerCase()">
+          {{ cliente.contrato_estado }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sin clientes -->
+  <div *ngIf="!cargando && clientes.length === 0" class="empty-state">
+    <div class="empty-icon">👥</div>
+    <h2>No tienes pacientes registrados</h2>
+    <p>Los pacientes que contraten tus servicios aparecerán aquí</p>
+  </div>
+
+  <!-- Panel de detalle del cliente -->
+  <div *ngIf="mostrarDetalle && clienteSeleccionado" class="detail-panel">
+    <!-- Overlay para cerrar -->
+    <div class="overlay" (click)="cerrarDetalle()"></div>
+
+    <!-- Contenido del panel -->
+    <div class="panel-content">
+      <!-- Header del panel -->
+      <div class="panel-header">
+        <h2>{{ clienteSeleccionado.nombre }}</h2>
+        <button class="close-btn" (click)="cerrarDetalle()">✕</button>
+      </div>
+
+      <!-- Contenido principal (si no hay formulario ni dieta generada) -->
+      <div *ngIf="!mostrarFormularioDieta && !dietaGenerada" class="panel-body">
+        <!-- Información personal -->
+        <section class="info-section">
+          <h3>📋 Información Personal</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Edad</label>
+              <p>{{ clienteSeleccionado.edad || 'No especificada' }} años</p>
+            </div>
+            <div class="info-item">
+              <label>Peso Actual</label>
+              <p>{{ clienteSeleccionado.peso || 'No registrado' }} kg</p>
+            </div>
+            <div class="info-item">
+              <label>Altura</label>
+              <p>{{ clienteSeleccionado.altura || 'No registrada' }} m</p>
+            </div>
+            <div class="info-item">
+              <label>Peso Inicial</label>
+              <p>{{ clienteSeleccionado.peso_inicial || 'No registrado' }} kg</p>
+            </div>
+            <div class="info-item">
+              <label>Objetivo</label>
+              <p>{{ formatearObjetivo(clienteSeleccionado.objetivo) }}</p>
+            </div>
+            <div class="info-item">
+              <label>IMC</label>
+              <p>
+                {{ calcularIMC(clienteSeleccionado) || 'N/A' }} 
+                <span *ngIf="calcularIMC(clienteSeleccionado)" class="imc-class">
+                  ({{ clasificacionIMC(calcularIMC(clienteSeleccionado)!) }})
+                </span>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Información médica -->
+        <section class="info-section">
+          <h3>⚕️ Información Médica</h3>
+          
+          <div class="medical-info">
+            <div *ngIf="clienteSeleccionado.enfermedades && clienteSeleccionado.enfermedades.length > 0">
+              <h4>Condiciones Médicas</h4>
+              <ul class="conditions-list">
+                <li *ngFor="let enfermedad of clienteSeleccionado.enfermedades">
+                  {{ enfermedad }}
+                </li>
+              </ul>
+            </div>
+            
+            <div *ngIf="clienteSeleccionado.descripcion_medica">
+              <h4>Descripción Médica</h4>
+              <p>{{ clienteSeleccionado.descripcion_medica }}</p>
+            </div>
+
+            <div *ngIf="!clienteSeleccionado.enfermedades?.length && !clienteSeleccionado.descripcion_medica">
+              <p class="no-medical">Sin condiciones médicas registradas</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Botones de acción -->
+        <div class="panel-actions">
+          <button class="btn btn-primary" (click)="abrirFormularioDieta()">
+            🥗 Generar Dieta con IA
+          </button>
+          <button class="btn btn-secondary" (click)="cerrarDetalle()">
+            Cerrar
+          </button>
+        </div>
+      </div>
+
+      <!-- Formulario para generar dieta -->
+      <div *ngIf="mostrarFormularioDieta" class="form-section">
+        <h3>🤖 Generar Dieta con IA</h3>
+        <p class="form-subtitle">Completa los detalles para crear una dieta personalizada</p>
+
+        <form (ngSubmit)="generarDieta()">
+          <div class="form-group">
+            <label for="nombre">Nombre de la Dieta *</label>
+            <input
+              id="nombre"
+              type="text"
+              [(ngModel)]="nombreDieta"
+              name="nombreDieta"
+              placeholder="Ej: Dieta de Pérdida de Grasa"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="calorias">Calorías Objetivo *</label>
+            <input
+              id="calorias"
+              type="number"
+              [(ngModel)]="caloriasObjetivo"
+              name="caloriasObjetivo"
+              min="1000"
+              max="5000"
+            />
+            <p class="form-hint">Calorías diarias recomendadas</p>
+          </div>
+
+          <div class="form-group">
+            <label for="dias">Días de Duración</label>
+            <select [(ngModel)]="diasDuracion" name="diasDuracion" id="dias">
+              <option value="7">7 días (1 semana)</option>
+              <option value="14">14 días (2 semanas)</option>
+              <option value="21">21 días (3 semanas)</option>
+              <option value="30">30 días (1 mes)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="preferencias">Preferencias Especiales</label>
+            <textarea
+              id="preferencias"
+              [(ngModel)]="preferencias"
+              name="preferencias"
+              placeholder="Ej: Sin gluten, vegetariano, alergias, etc."
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div *ngIf="error" class="form-error">{{ error }}</div>
+
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="generandoDieta"
+            >
+              <span *ngIf="!generandoDieta">✨ Generar Dieta</span>
+              <span *ngIf="generandoDieta">Generando...</span>
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="cancelarFormulario()"
+              [disabled]="generandoDieta"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Dieta generada -->
+      <div *ngIf="dietaGenerada && !mostrarFormularioDieta" class="dieta-section">
+        <div class="dieta-header">
+          <h3>✅ Dieta Generada</h3>
+          <p class="dieta-nombre">{{ dietaGenerada.nombre }}</p>
+        </div>
+
+        <div class="dieta-info">
+          <div class="info-item">
+            <span class="label">Calorías Totales</span>
+            <span class="value">{{ dietaGenerada.calorias_totales }} kcal</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Objetivo</span>
+            <span class="value">{{ formatearObjetivo(dietaGenerada.objetivo) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Creada el</span>
+            <span class="value">{{ dietaGenerada.fecha_creacion | date: 'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        </div>
+
+        <div class="dieta-contenido">
+          <h4>📝 Plan Nutricional</h4>
+          <div class="contenido-text">
+            {{ dietaGenerada.contenido }}
+          </div>
+        </div>
+
+        <div class="panel-actions">
+          <button class="btn btn-primary" (click)="guardarDieta()">
+            💾 Ir al Dashboard
+          </button>
+          <button class="btn btn-secondary" (click)="abrirFormularioDieta()">
+            🔄 Generar Nueva Dieta
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
