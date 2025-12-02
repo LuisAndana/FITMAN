@@ -1,7 +1,7 @@
 // src/app/app.routes.ts
 import { Routes } from '@angular/router';
 import { AuthGuard, ClienteGuard, NutrioloGoGuard } from './guards/auth.guard';
-
+import { PagoStripeComponent } from './pages/pago-stripe/pago-stripe.component';
 export const routes: Routes = [
   // ====== PÚBLICAS ======
   {
@@ -72,6 +72,12 @@ export const routes: Routes = [
     redirectTo: 'nutriologo/dashboard',
     pathMatch: 'full'
   },
+
+  {
+    path: 'pago-stripe',
+    component: PagoStripeComponent
+  },
+
   {
     path: '**',
     redirectTo: ''

@@ -5,10 +5,58 @@
 # ===============================================
 
 import os
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
+
+# 🔹 CARGAR VARIABLES DE ENTORNO (NUEVO - IMPORTANTE!)
+load_dotenv()
+
+# 🔹 Verificar que Stripe está configurado correctamente
+stripe_secret = os.getenv("STRIPE_SECRET_KEY", "").strip()
+stripe_public = os.getenv("STRIPE_PUBLIC_KEY", "").strip()
+
+print("\n" + "="*60)
+print("🔹 VERIFICACIÓN DE CONFIGURACIÓN")
+print("="*60)
+
+# Verificar Stripe Secret Key
+if not stripe_secret:
+    print("❌ ERROR: STRIPE_SECRET_KEY no está configurada")
+elif stripe_secret == "sk_test_*ummy" or "*ummy" in stripe_secret:
+    print("❌ ERROR: STRIPE_SECRET_KEY sigue siendo dummy")
+    print(f"   Valor actual: {stripe_secret[:20]}...")
+else:
+    print(f"✅ STRIPE_SECRET_KEY cargada: {stripe_secret[:30]}...")
+
+# Verificar Stripe Public Key
+if not stripe_public:
+    print("❌ ERROR: STRIPE_PUBLIC_KEY no está configurada")
+elif stripe_public == "pk_test_*ummy" or "*ummy" in stripe_public:
+    print("❌ ERROR: STRIPE_PUBLIC_KEY sigue siendo dummy")
+    print(f"   Valor actual: {stripe_public[:20]}...")
+else:
+    print(f"✅ STRIPE_PUBLIC_KEY cargada: {stripe_public[:30]}...")
+
+# Verificar Database
+db_url = os.getenv("DATABASE_URL", "").strip()
+if not db_url:
+    print("❌ ERROR: DATABASE_URL no está configurada")
+elif "*ummy*" in db_url or "mysql://" not in db_url:
+    print("❌ ERROR: DATABASE_URL parece incompleta")
+else:
+    print(f"✅ DATABASE_URL cargada correctamente")
+
+# Verificar JWT
+jwt_secret = os.getenv("SECRET_KEY", "").strip()
+if not jwt_secret or jwt_secret == "tu_clave_secreta_super_segura_aqui":
+    print("⚠️  WARNING: SECRET_KEY es la clave por defecto (cámbiala en producción)")
+else:
+    print(f"✅ SECRET_KEY configurada")
+
+print("="*60 + "\n")
 
 # 🔹 Configuración y base de datos
 from config.database import Base, engine
