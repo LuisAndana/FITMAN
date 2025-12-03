@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { DomSanitizer } from '@angular/platform-browser';
+import { DietaDetalleComponent } from '../../pages/dieta-detalle/dieta-detalle.component';
 
 interface Cliente {
   id_usuario: number;
@@ -28,10 +29,23 @@ interface DietaRequest {
   preferencias: string;
 }
 
+interface Dieta {
+  id_dieta: number;
+  nombre: string;
+  contenido: string;
+  calorias_totales: number;
+  objetivo: string;
+  fecha_creacion: string;
+  dias_duracion?: number;
+  fecha_vencimiento?: string;
+  estado?: string;
+  dias_restantes?: number;
+}
+
 @Component({
   selector: 'app-pacientes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DietaDetalleComponent],
   templateUrl: './pacientes.component.html',
   styleUrls: ['./pacientes.component.css']
 })
@@ -55,6 +69,11 @@ export class PacientesComponent implements OnInit {
   preferencias: string = '';
   generandoDieta: boolean = false;
   dietaGenerada: any = null;
+
+  // ✅ NUEVO: Variables para mostrar detalle de dieta
+  dietaSeleccionada: Dieta | null = null;
+  mostrarDetalleDieta: boolean = false;
+  descargandoPDF: boolean = false;
 
   ngOnInit(): void {
     console.log('🔄 PacientesComponent iniciando...');
@@ -121,6 +140,7 @@ export class PacientesComponent implements OnInit {
     this.mostrarDetalle = true;
     this.mostrarFormularioDieta = false;
     this.dietaGenerada = null;
+    this.mostrarDetalleDieta = false;
   }
 
   /**
@@ -132,6 +152,7 @@ export class PacientesComponent implements OnInit {
     this.clienteSeleccionado = null;
     this.mostrarFormularioDieta = false;
     this.dietaGenerada = null;
+    this.mostrarDetalleDieta = false;
     this.resetFormulario();
   }
 
@@ -224,6 +245,11 @@ export class PacientesComponent implements OnInit {
       this.dietaGenerada = response;
       this.mostrarFormularioDieta = false;
       this.generandoDieta = false;
+      
+      // ✅ IMPORTANTE: Abrir el modal profesional automáticamente
+      setTimeout(() => {
+        this.abrirDetalleDieta(response);
+      }, 500);
     })
     .catch((err) => {
       console.error('❌ Error al generar dieta:', err);
@@ -233,24 +259,220 @@ export class PacientesComponent implements OnInit {
   }
 
   /**
+   * ✅ NUEVO: Abre el modal con detalle de la dieta
+   */
+  abrirDetalleDieta(dieta: Dieta): void {
+    console.log('🍽️ Abriendo detalle de dieta:', dieta.nombre);
+    this.dietaSeleccionada = dieta;
+    this.mostrarDetalleDieta = true;
+  }
+
+  /**
+   * ✅ NUEVO: Cierra el modal de detalle de dieta
+   */
+  cerrarDetalleDieta(): void {
+    console.log('❌ Cerrando detalle de dieta');
+    this.mostrarDetalleDieta = false;
+    this.dietaSeleccionada = null;
+  }
+
+  /**
+   * ✅ NUEVO: Descarga la dieta en PDF (Implementación completa - Limpia)
+   */
+  descargarDietaPDF(dieta: Dieta): void {
+    if (!dieta) {
+      console.error('❌ No hay dieta para descargar');
+      return;
+    }
+
+    this.descargandoPDF = true;
+    console.log('📥 Generando PDF de dieta:', dieta.nombre);
+
+    // Cargar pdfMake dinámicamente
+    import('pdfmake/build/pdfmake').then((pdfMakeModule: any) => {
+      import('pdfmake/build/vfs_fonts').then((vfsFontsModule: any) => {
+        try {
+          const pdfMake = pdfMakeModule.default;
+          const vfs = vfsFontsModule.pdfMake?.vfs || vfsFontsModule.default?.vfs;
+
+          if (vfs) {
+            (pdfMake as any).vfs = vfs;
+          }
+
+          // Limpiar contenido de markdown
+          const contenidoLimpio = this.limpiarMarkdown(dieta.contenido);
+
+          // Crear documento PDF
+          const docDefinition: any = {
+            content: [
+              {
+                columns: [
+                  { text: 'PLAN NUTRICIONAL PERSONALIZADO', style: 'headerTitle' },
+                  { text: 'FitMan', style: 'logo', alignment: 'right' }
+                ],
+                columnGap: 20,
+                marginBottom: 5
+              },
+              {
+                canvas: [
+                  { type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 3, lineColor: '#ff7a00' }
+                ],
+                marginBottom: 20
+              },
+              { text: dieta.nombre, style: 'dietaTitle', marginBottom: 15 },
+              {
+                columns: [
+                  {
+                    stack: [
+                      { text: 'OBJETIVO', style: 'label' },
+                      { text: this.formatearObjetivo(dieta.objetivo), style: 'valor' },
+                      { text: '', margin: [0, 10] },
+                      { text: 'DURACIÓN', style: 'label' },
+                      { text: `${dieta.dias_duracion || 30} días`, style: 'valor' }
+                    ],
+                    width: '45%'
+                  },
+                  {
+                    stack: [
+                      { text: 'CALORÍAS DIARIAS', style: 'label' },
+                      { text: `${dieta.calorias_totales} kcal`, style: 'caloriaValue' },
+                      { text: '', margin: [0, 10] },
+                      { text: 'CREADO', style: 'label' },
+                      { text: this.formatearFecha(dieta.fecha_creacion), style: 'valor' }
+                    ],
+                    width: '45%'
+                  }
+                ],
+                columnGap: 20,
+                marginBottom: 25
+              },
+              {
+                canvas: [
+                  { type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1, lineColor: '#e0e0e0' }
+                ],
+                marginBottom: 20
+              },
+              { text: 'PLAN DETALLADO', style: 'sectionTitle', marginBottom: 12 },
+              { text: contenidoLimpio, style: 'contenido', marginBottom: 25 },
+              {
+                canvas: [
+                  { type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1, lineColor: '#e0e0e0' }
+                ],
+                marginBottom: 20
+              },
+              {
+                stack: [
+                  { text: 'RECOMENDACIONES IMPORTANTES', style: 'sectionTitle', marginBottom: 12 },
+                  {
+                    ul: [
+                      'Mantén una buena hidratación: bebe al menos 2 litros de agua al día',
+                      'Realiza actividad física de acuerdo con tus capacidades',
+                      'Consulta con tu nutriólogo antes de hacer cambios significativos',
+                      'Registra tu peso y medidas regularmente para monitorear el progreso',
+                      'Sigue el plan de manera consistente para obtener mejores resultados'
+                    ],
+                    style: 'recomendaciones'
+                  }
+                ],
+                margin: [15, 15, 15, 15],
+                fillColor: '#fff8f0',
+                borderColor: '#ffb366',
+                borderWidth: 1,
+                borderRadius: 5
+              },
+              {
+                text: 'Este plan ha sido personalizado para ti. Para cambios o consultas, contáctate con tu nutriólogo.',
+                style: 'footer',
+                margin: [0, 25, 0, 0]
+              }
+            ],
+            styles: {
+              headerTitle: { fontSize: 16, bold: true, color: '#1a1a1a', letterSpacing: 1 },
+              logo: { fontSize: 24, bold: true, color: '#ff7a00' },
+              dietaTitle: { fontSize: 22, bold: true, color: '#ff7a00' },
+              label: { fontSize: 9, bold: true, color: '#666', textTransform: 'uppercase', letterSpacing: 0.5, margin: [0, 0, 0, 3] },
+              valor: { fontSize: 12, color: '#333', bold: true, margin: [0, 0, 0, 5] },
+              caloriaValue: { fontSize: 14, color: '#ff7a00', bold: true, margin: [0, 0, 0, 5] },
+              sectionTitle: { fontSize: 11, bold: true, color: '#ff7a00', textTransform: 'uppercase', letterSpacing: 0.5 },
+              contenido: { fontSize: 10, lineHeight: 1.6, color: '#333' },
+              recomendaciones: { fontSize: 10, lineHeight: 1.5, color: '#333' },
+              footer: { fontSize: 8, color: '#999', italics: true, alignment: 'center' }
+            },
+            pageMargins: [40, 40, 40, 50],
+            pageSize: 'LETTER'
+          };
+
+          // Generar y descargar PDF
+          const pdfName = `${dieta.nombre.replace(/\s+/g, '_')}.pdf`;
+          pdfMake.createPdf(docDefinition).download(pdfName);
+          console.log('✅ PDF descargado exitosamente:', pdfName);
+          this.descargandoPDF = false;
+        } catch (error: any) {
+          console.error('❌ Error al generar PDF:', error);
+          this.descargandoPDF = false;
+          alert('Error al generar el PDF. Intenta nuevamente.');
+        }
+      }).catch((error: any) => {
+        console.error('❌ Error al cargar VFS fonts:', error);
+        this.descargandoPDF = false;
+      });
+    }).catch((error: any) => {
+      console.error('❌ Error al cargar pdfMake:', error);
+      this.descargandoPDF = false;
+      alert('Error: No se pudo cargar la librería PDF');
+    });
+  }
+
+  /**
+   * Limpia el contenido markdown para que se vea limpio en PDF
+   */
+  private limpiarMarkdown(contenido: string): string {
+    try {
+      // Remover headers markdown
+      contenido = contenido.replace(/#{1,6}\s+\*\*/g, '');
+      contenido = contenido.replace(/#{1,6}\s+/g, '');
+      
+      // Remover asteriscos de bold
+      contenido = contenido.replace(/\*\*/g, '');
+      
+      // Remover guiones de lista
+      contenido = contenido.replace(/^\s*[-*]\s+/gm, '• ');
+      
+      // Remover guiones horizontales
+      contenido = contenido.replace(/^---+$/gm, '');
+      
+      // Remover backticks
+      contenido = contenido.replace(/`/g, '');
+      
+      // Limpiar espacios múltiples
+      contenido = contenido.replace(/\n\n\n+/g, '\n\n');
+      
+      return contenido.trim();
+    } catch (error) {
+      console.warn('⚠️ Error al limpiar markdown:', error);
+      return contenido;
+    }
+  }
+
+  /**
    * Guarda la dieta y navega al dashboard
    */
   guardarDieta(): void {
-  if (this.dietaGenerada) {
-    console.log('💾 Dieta guardada correctamente');
+    if (this.dietaGenerada) {
+      console.log('💾 Dieta guardada correctamente');
 
-    // TODO: Aquí puedes llamar al servicio para guardarla definitivamente si lo deseas
+      // TODO: Aquí puedes llamar al servicio para guardarla definitivamente si lo deseas
 
-    // Cerrar modal y limpiar formulario
-    this.mostrarDetalle = false;
-    this.dietaGenerada = null;
-    this.resetFormulario();
+      // Cerrar modal y limpiar formulario
+      this.mostrarDetalle = false;
+      this.dietaGenerada = null;
+      this.mostrarDetalleDieta = false;
+      this.resetFormulario();
 
-    // Refrescar lista de pacientes si hace falta
-    this.cargarClientes();
+      // Refrescar lista de pacientes si hace falta
+      this.cargarClientes();
+    }
   }
-}
-
 
   /**
    * Cancela la generación de dieta
@@ -309,8 +531,22 @@ export class PacientesComponent implements OnInit {
     return objetivos[objetivo] || objetivo;
   }
 
-  
-  
+  /**
+   * Formatea fecha a formato legible
+   */
+  formatearFecha(fecha: string): string {
+    try {
+      const date = new Date(fecha);
+      return date.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.warn('⚠️ Error al formatear fecha:', fecha);
+      return fecha;
+    }
+  }
 
   /**
    * Retry después de error

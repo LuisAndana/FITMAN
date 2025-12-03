@@ -1,5 +1,5 @@
 <div class="pacientes-container">
-  <!-- Header Principal - Concordancia con diseño del proyecto -->
+  <!-- Header Principal -->
   <div class="header-section">
     <div class="header-content">
       <h1 class="header-title">👥 Mis Pacientes</h1>
@@ -13,7 +13,7 @@
     <p>Cargando pacientes...</p>
   </div>
 
-  <!-- Error con mejor visualización -->
+  <!-- Error -->
   <div *ngIf="error && !cargando" class="error-banner">
     <div class="error-content">
       <span class="error-icon">⚠️</span>
@@ -73,7 +73,7 @@
     <p>Los pacientes que contraten tus servicios aparecerán aquí</p>
   </div>
 
-  <!-- Modal de Detalle -->
+  <!-- MODAL: Detalle del Paciente -->
   <div *ngIf="mostrarDetalle && clienteSeleccionado" class="modal-overlay" (click)="cerrarDetalle()">
     <div class="modal-container" (click)="$event.stopPropagation()">
       
@@ -223,57 +223,68 @@
           </form>
         </div>
 
-            <!-- DIETA GENERADA - FORMATO EXACTO DEL NUTRIÓLOGO -->
+        <!-- DIETA GENERADA - PREVIEW RÁPIDO -->
         <div *ngIf="dietaGenerada && !mostrarFormularioDieta" class="dieta-container">
-        <div class="dieta-header">
+          <div class="dieta-header">
             <h3>✅ Dieta Generada</h3>
             <p class="dieta-titulo">{{ dietaGenerada.nombre }}</p>
-        </div>
+          </div>
 
-        <!-- Info Rápida -->
-        <div class="dieta-info-quick">
+          <!-- Info Rápida -->
+          <div class="dieta-info-quick">
             <div class="quick-item">
-            <span class="quick-label">🔥 Calorías</span>
-            <span class="quick-value">{{ dietaGenerada.calorias_totales }} kcal/día</span>
+              <span class="quick-label">🔥 Calorías</span>
+              <span class="quick-value">{{ dietaGenerada.calorias_totales }} kcal/día</span>
             </div>
             <div class="quick-item">
-            <span class="quick-label">🎯 Objetivo</span>
-            <span class="quick-value">{{ formatearObjetivo(dietaGenerada.objetivo) }}</span>
+              <span class="quick-label">🎯 Objetivo</span>
+              <span class="quick-value">{{ formatearObjetivo(dietaGenerada.objetivo) }}</span>
             </div>
             <div class="quick-item">
-            <span class="quick-label">📅 Duración</span>
-            <span class="quick-value">{{ diasDuracion }} días</span>
+              <span class="quick-label">📅 Duración</span>
+              <span class="quick-value">{{ diasDuracion }} días</span>
             </div>
+          </div>
+
+          <!-- Preview del contenido (primeras líneas) -->
+          <div class="dieta-preview">
+            <pre class="dieta-texto-preview">{{ dietaGenerada.contenido | slice:0:500 }}...</pre>
+          </div>
         </div>
 
-        <!-- CONTENIDO ORIGINAL SIN MODIFICAR -->
-        <div class="dieta-contenido-formatted">
-            <pre class="dieta-texto">
-        {{ dietaGenerada.contenido }}
-            </pre>
-        </div>
+      </div>
 
-        <!-- Acciones -->
-        <div class="modal-actions">
-            <button class="btn btn-primary" (click)="guardarDieta()">
-            💾 Guardar y Cerrar
-            </button>
-            <button class="btn btn-secondary" (click)="abrirFormularioDieta()">
+      <!-- Modal Footer - Botones SIEMPRE visibles -->
+      <div class="modal-footer">
+        <!-- Si hay dieta generada, mostrar botones de dieta -->
+        <div *ngIf="dietaGenerada && !mostrarFormularioDieta" class="footer-buttons">
+          <button class="btn btn-primary" (click)="abrirDetalleDieta(dietaGenerada)">
+            👁️ Ver Dieta Completa
+          </button>
+          <button class="btn btn-secondary" (click)="abrirFormularioDieta()">
             🔄 Nueva Dieta
-            </button>
-        </div>
+          </button>
         </div>
 
-
-      <!-- Modal Footer -->
-      <div *ngIf="!mostrarFormularioDieta && !dietaGenerada" class="modal-footer">
-        <button class="btn btn-primary" (click)="abrirFormularioDieta()">
-          🥗 Generar Dieta con IA
-        </button>
-        <button class="btn btn-secondary" (click)="cerrarDetalle()">
-          Cerrar
-        </button>
+        <!-- Si no hay dieta o está en formulario, mostrar botones normales -->
+        <div *ngIf="!dietaGenerada || mostrarFormularioDieta" class="footer-buttons">
+          <button class="btn btn-primary" (click)="abrirFormularioDieta()" *ngIf="!mostrarFormularioDieta">
+            🥗 Generar Dieta con IA
+          </button>
+          <button class="btn btn-secondary" (click)="cerrarDetalle()">
+            Cerrar
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- ✅ FUERA DEL CONTENEDOR: Modal Profesional de Dieta con 3 Pestañas -->
+<!-- Debe estar AQUÍ (fuera) para que NO se cierre cuando cierres el modal de pacientes -->
+<app-dieta-detalle 
+  *ngIf="mostrarDetalleDieta && dietaSeleccionada"
+  [dieta]="dietaSeleccionada"
+  (cerrar)="cerrarDetalleDieta()"
+  (descargarPDF)="descargarDietaPDF($event)"
+></app-dieta-detalle>

@@ -28,6 +28,20 @@ export interface EstadoDietas {
   }>;
 }
 
+export interface DietaParsed {
+  tiene_estructura: boolean;
+  dias?: Array<{
+    numero: number;
+    comidas: {
+      [key: string]: {
+        kcal: string;
+        items: string[];
+      };
+    };
+  }>;
+  texto_completo: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -167,5 +181,113 @@ export class DietaService {
         responseType: 'blob'
       }
     );
+  }
+
+  /**
+   * 🆕 PARSEAR CONTENIDO DE DIETA
+   * Convierte texto plano en estructura de datos
+   */
+  parsearContenidoDieta(contenido: string): DietaParsed {
+    if (!contenido) {
+      return {
+        tiene_estructura: false,
+        texto_completo: '',
+        dias: []
+      };
+    }
+
+    // Buscar patrones de días
+    const patronDias = /###?\s*\*?\*?DÍA\s+(\d+)\*?\*?/gi;
+    
+    // Verificar si tiene estructura de días
+    if (!patronDias.test(contenido)) {
+      return {
+        tiene_estructura: false,
+        texto_completo: contenido,
+        dias: []
+      };
+    }
+
+    const dias: Array<any> = [];
+    const partes = contenido.split(/###?\s*\*?\*?DÍA\s+(\d+)\*?\*?/i);
+
+    for (let i = 1; i < partes.length; i += 2) {
+      const numeroDia = parseInt(partes[i]);
+      const contenidoDia = partes[i + 1] || '';
+
+      const comidas: any = {};
+      const tiposComida = ['DESAYUNO', 'ALMUERZO', 'MERIENDA', 'CENA', 'COMIDA'];
+
+      tiposComida.forEach(tipo => {
+        const patronComida = new RegExp(
+          `\\*?\\*?${tipo}\\s*\\(Aprox\\.\\s+(\\d+)\\s+kcal\\)\\*?\\*?[\\s\\S]*?(?=\\*?\\*?(?:DESAYUNO|ALMUERZO|MERIENDA|CENA|COMIDA|DÍA|Recomendaciones|#|$))`,
+          'i'
+        );
+
+        const match = contenidoDia.match(patronComida);
+        if (match) {
+          const texto = match[0];
+          const kcal = match[1];
+
+          // Extraer items
+          const items = texto
+            .split('\n')
+            .filter(l => l.trim().match(/^[\*\-]/))
+            .map(l => l.replace(/^[\*\-]\s*/, '').trim())
+            .filter(l => l && !l.toUpperCase().includes('DESAYUNO') && 
+                        !l.toUpperCase().includes('ALMUERZO') &&
+                        !l.toUpperCase().includes('MERIENDA') &&
+                        !l.toUpperCase().includes('CENA'));
+
+          comidas[tipo.toLowerCase()] = { kcal, items };
+        }
+      });
+
+      if (Object.keys(comidas).length > 0) {
+        dias.push({ numero: numeroDia, comidas });
+      }
+    }
+
+    return {
+      tiene_estructura: dias.length > 0,
+      dias: dias.length > 0 ? dias : undefined,
+      texto_completo: contenido
+    };
+  }
+
+  /**
+   * 🆕 CALCULAR CALORÍAS TOTALES DE UN DÍA
+   * Suma las calorías de todas las comidas
+   */
+  calcularCaloriasDia(dia: any): number {
+    let total = 0;
+    if (!dia.comidas) return 0;
+
+    Object.values(dia.comidas).forEach((comida: any) => {
+      if (comida.kcal) {
+        total += parseInt(comida.kcal) || 0;
+      }
+    });
+
+    return total;
+  }
+
+  /**
+   * 🆕 OBTENER RESUMEN NUTRICIONAL
+   * Extrae información clave de la dieta
+   */
+  obtenerResumenNutricional(dieta: Dieta): any {
+    const parseado = this.parsearContenidoDieta(dieta.contenido);
+
+    return {
+      nombre_dieta: dieta.nombre,
+      objetivo: dieta.objetivo,
+      calorias_totales: dieta.calorias_totales,
+      duracion_dias: dieta.dias_duracion || 30,
+      tiene_estructura: parseado.tiene_estructura,
+      num_dias: parseado.dias?.length || 0,
+      fecha_creacion: dieta.fecha_creacion,
+      estado: dieta.estado || 'activa'
+    };
   }
 }

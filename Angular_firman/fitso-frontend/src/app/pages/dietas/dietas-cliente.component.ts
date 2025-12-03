@@ -2,11 +2,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { DietaService, Dieta, EstadoDietas } from '../../services/dieta.service';
+import { DietaDetalleComponent } from '../../pages/dieta-detalle/dieta-detalle.component';
 
 @Component({
   selector: 'app-dietas-cliente',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, DietaDetalleComponent],
   templateUrl: './dietas-cliente.component.html',
   styleUrls: ['./dietas-cliente.component.css']
 })
@@ -19,6 +20,11 @@ export class DietasClienteComponent implements OnInit {
   error = '';
   mostrarDetalle = false;
   descargandoPDF = false;
+  
+  // ✅ NUEVO: Variables para modal profesional de dieta
+  dietaSeleccionadaProfesional: Dieta | null = null;
+  mostrarModalProfesional = false;
+  mostrarDetalleDieta = false;
   
   // Estadísticas
   dietasActivas = 0;
@@ -62,14 +68,46 @@ export class DietasClienteComponent implements OnInit {
     });
   }
 
+  /**
+   * Abre el modal básico con detalles
+   */
   abrirDetalle(dieta: Dieta): void {
     this.dietaSeleccionada = dieta;
     this.mostrarDetalle = true;
   }
 
+  /**
+   * Cierra el modal básico
+   */
   cerrarDetalle(): void {
     this.mostrarDetalle = false;
     this.dietaSeleccionada = null;
+  }
+
+  /**
+   * ✅ NUEVO: Abre el modal profesional con 3 pestañas
+   */
+  abrirDietaProfesional(dieta: Dieta): void {
+    console.log('🍽️ Abriendo dieta profesional:', dieta.nombre);
+    this.dietaSeleccionadaProfesional = dieta;
+    this.mostrarModalProfesional = true;
+  }
+
+  /**
+   * ✅ NUEVO: Cierra el modal profesional
+   */
+  cerrarDietaProfesional(): void {
+    console.log('❌ Cerrando dieta profesional');
+    this.mostrarModalProfesional = false;
+    this.dietaSeleccionadaProfesional = null;
+  }
+
+  /**
+   * ✅ NUEVO: Descarga PDF desde el modal profesional
+   */
+  descargarDesdeModal(dieta: Dieta): void {
+    console.log('📥 Descargando dieta desde modal:', dieta.nombre);
+    this.descargarDietaPDF(dieta);
   }
 
   formatearObjetivo(objetivo: string): string {
@@ -378,5 +416,23 @@ export class DietasClienteComponent implements OnInit {
           this.descargandoPDF = false;
         }
       });
+  }
+
+  /**
+   * Abre el modal profesional con la dieta completa
+   */
+  abrirDetalleDieta(dieta: Dieta): void {
+    console.log('👁️ Abriendo detalle de dieta:', dieta.nombre);
+    this.dietaSeleccionada = dieta;
+    this.mostrarDetalleDieta = true;
+  }
+
+  /**
+   * Cierra el modal profesional
+   */
+  cerrarDetalleDieta(): void {
+    console.log('❌ Cerrando detalle de dieta');
+    this.mostrarDetalleDieta = false;
+    this.dietaSeleccionada = null;
   }
 }

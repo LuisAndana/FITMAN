@@ -58,7 +58,7 @@
       *ngFor="let dieta of dietas" 
       class="diet-card"
       [class.expired]="dieta.estado === 'vencida'"
-      (click)="abrirDetalle(dieta)"
+      (click)="abrirDetalleDieta(dieta)"
     >
       <!-- Estado Badge -->
       <div class="status-badge" [style.background-color]="getEstadoDieta(dieta).color">
@@ -105,7 +105,7 @@
           {{ dieta.contenido.substring(0, 100) }}...
         </div>
 
-        <button class="view-btn" (click)="abrirDetalle(dieta); $event.stopPropagation()">
+        <button class="view-btn" (click)="abrirDetalleDieta(dieta); $event.stopPropagation()">
           Ver Detalles Completos
           <span class="arrow">→</span>
         </button>
@@ -121,7 +121,7 @@
   </div>
 
   <!-- Modal Detalle -->
-  <div *ngIf="mostrarDetalle && dietaSeleccionada" class="modal-overlay" (click)="cerrarDetalle()">
+  <div *ngIf="mostrarDetalleDieta && dietaSeleccionada" class="modal-overlay" (click)="cerrarDetalleDieta()">
     <div class="modal-container" (click)="$event.stopPropagation()">
       
       <!-- Modal Header -->
@@ -130,7 +130,7 @@
           <h2>{{ dietaSeleccionada.nombre }}</h2>
           <p class="modal-goal">{{ formatearObjetivo(dietaSeleccionada.objetivo) }}</p>
         </div>
-        <button class="close-modal" (click)="cerrarDetalle()">
+        <button class="close-modal" (click)="cerrarDetalleDieta()">
           <span>✕</span>
         </button>
       </div>
@@ -215,8 +215,16 @@
           <span *ngIf="!descargandoPDF">📥 Descargar PDF</span>
           <span *ngIf="descargandoPDF">⏳ Descargando...</span>
         </button>
-        <button class="btn-close" (click)="cerrarDetalle()">Cerrar</button>
+        <button class="btn-close" (click)="cerrarDetalleDieta()">Cerrar</button>
       </div>
     </div>
   </div>
+
+  <!-- MODAL PROFESIONAL - FUERA DEL CONTENEDOR -->
+  <app-dieta-detalle 
+    *ngIf="mostrarDetalleDieta && dietaSeleccionada"
+    [dieta]="dietaSeleccionada"
+    (cerrar)="cerrarDetalleDieta()"
+    (descargarPDF)="descargarDietaPDF($event)">
+  </app-dieta-detalle>
 </div>

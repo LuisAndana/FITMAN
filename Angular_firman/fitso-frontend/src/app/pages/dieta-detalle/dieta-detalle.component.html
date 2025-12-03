@@ -1,0 +1,241 @@
+<div class="dieta-detalle-modal" *ngIf="dieta">
+  <!-- Header Modal -->
+  <div class="modal-header">
+    <div class="header-content">
+      <h2 class="modal-title">{{ dieta.nombre }}</h2>
+      <p class="modal-subtitle">{{ formatearObjetivo(dieta.objetivo) }}</p>
+    </div>
+    <button class="close-btn" (click)="cerrarModal()" aria-label="Cerrar">
+      <span>✕</span>
+    </button>
+  </div>
+
+  <!-- Tabs de Navegación -->
+  <div class="tabs-container">
+    <button 
+      class="tab-btn" 
+      [class.active]="mostrando === 'info'"
+      (click)="cambiarVista('info')"
+    >
+      <span class="tab-icon">ℹ️</span> Información
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="mostrando === 'plan'"
+      (click)="cambiarVista('plan')"
+    >
+      <span class="tab-icon">🍽️</span> Plan Detallado
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="mostrando === 'recomendaciones'"
+      (click)="cambiarVista('recomendaciones')"
+    >
+      <span class="tab-icon">💡</span> Recomendaciones
+    </button>
+  </div>
+
+  <!-- Modal Body -->
+  <div class="modal-body">
+
+    <!-- TAB 1: INFORMACIÓN GENERAL -->
+    <div *ngIf="mostrando === 'info'" class="tab-content info-tab">
+      <div class="info-grid">
+        <!-- Card 1: Calorías -->
+        <div class="info-card">
+          <div class="info-icon">🔥</div>
+          <div class="info-content">
+            <span class="info-label">Calorías Diarias</span>
+            <span class="info-value">{{ dieta.calorias_totales }} kcal</span>
+          </div>
+        </div>
+
+        <!-- Card 2: Duración -->
+        <div class="info-card">
+          <div class="info-icon">📅</div>
+          <div class="info-content">
+            <span class="info-label">Duración</span>
+            <span class="info-value">{{ dieta.dias_duracion || 30 }} días</span>
+          </div>
+        </div>
+
+        <!-- Card 3: Estado -->
+        <div class="info-card">
+          <div class="info-icon">✅</div>
+          <div class="info-content">
+            <span class="info-label">Estado</span>
+            <span class="info-value" [style.color]="dieta.estado === 'activa' ? '#27ae60' : '#e74c3c'">
+              {{ dieta.estado === 'activa' ? 'Activa' : 'Vencida' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Card 4: Fecha Creación -->
+        <div class="info-card">
+          <div class="info-icon">📆</div>
+          <div class="info-content">
+            <span class="info-label">Creado el</span>
+            <span class="info-value">{{ formatearFecha(dieta.fecha_creacion) }}</span>
+          </div>
+        </div>
+
+        <!-- Card 5: Vencimiento -->
+        <div class="info-card" *ngIf="dieta.fecha_vencimiento">
+          <div class="info-icon">⏰</div>
+          <div class="info-content">
+            <span class="info-label">Vence el</span>
+            <span class="info-value">{{ formatearFecha(dieta.fecha_vencimiento) }}</span>
+          </div>
+        </div>
+
+        <!-- Card 6: Días Restantes -->
+        <div class="info-card" *ngIf="dieta.dias_restantes">
+          <div class="info-icon">🗓️</div>
+          <div class="info-content">
+            <span class="info-label">Días Restantes</span>
+            <span class="info-value">{{ dieta.dias_restantes }} días</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección de Acciones -->
+      <div class="actions-section">
+        <button class="action-btn download-btn" (click)="descargarPDFDieta()" [disabled]="descargando">
+          <span *ngIf="!descargando">📥 Descargar PDF</span>
+          <span *ngIf="descargando">⏳ Descargando...</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 2: PLAN DETALLADO -->
+    <div *ngIf="mostrando === 'plan'" class="tab-content plan-tab">
+      <!-- Si tiene estructura de días -->
+      <ng-container *ngIf="contenidoParsado?.tiene_estructura">
+        <div *ngFor="let dia of contenidoParsado.dias" class="dia-section">
+          <h3 class="dia-titulo">📅 DÍA {{ dia.numero }}</h3>
+          
+          <div class="comidas-container">
+            <!-- Desayuno -->
+            <ng-container *ngIf="dia.comidas['desayuno']">
+              <div class="comida-card desayuno">
+                <div class="comida-header">
+                  <span class="comida-icon">🌅</span>
+                  <span class="comida-titulo">Desayuno</span>
+                  <span class="comida-kcal">({{ dia.comidas['desayuno'].kcal }} kcal)</span>
+                </div>
+                <ul class="comida-items">
+                  <li *ngFor="let item of dia.comidas['desayuno'].items" class="item">
+                    {{ item }}
+                  </li>
+                </ul>
+              </div>
+            </ng-container>
+
+            <!-- Almuerzo -->
+            <ng-container *ngIf="dia.comidas['almuerzo']">
+              <div class="comida-card almuerzo">
+                <div class="comida-header">
+                  <span class="comida-icon">🍽️</span>
+                  <span class="comida-titulo">Almuerzo</span>
+                  <span class="comida-kcal">({{ dia.comidas['almuerzo'].kcal }} kcal)</span>
+                </div>
+                <ul class="comida-items">
+                  <li *ngFor="let item of dia.comidas['almuerzo'].items" class="item">
+                    {{ item }}
+                  </li>
+                </ul>
+              </div>
+            </ng-container>
+
+            <!-- Merienda -->
+            <ng-container *ngIf="dia.comidas['merienda']">
+              <div class="comida-card merienda">
+                <div class="comida-header">
+                  <span class="comida-icon">☕</span>
+                  <span class="comida-titulo">Merienda</span>
+                  <span class="comida-kcal">({{ dia.comidas['merienda'].kcal }} kcal)</span>
+                </div>
+                <ul class="comida-items">
+                  <li *ngFor="let item of dia.comidas['merienda'].items" class="item">
+                    {{ item }}
+                  </li>
+                </ul>
+              </div>
+            </ng-container>
+
+            <!-- Cena -->
+            <ng-container *ngIf="dia.comidas['cena']">
+              <div class="comida-card cena">
+                <div class="comida-header">
+                  <span class="comida-icon">🌙</span>
+                  <span class="comida-titulo">Cena</span>
+                  <span class="comida-kcal">({{ dia.comidas['cena'].kcal }} kcal)</span>
+                </div>
+                <ul class="comida-items">
+                  <li *ngFor="let item of dia.comidas['cena'].items" class="item">
+                    {{ item }}
+                  </li>
+                </ul>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Si no tiene estructura, mostrar texto plano -->
+      <ng-container *ngIf="!contenidoParsado?.tiene_estructura">
+        <div class="contenido-texto">
+          <p *ngFor="let parrafo of contenidoParsado?.texto_completo.split('\n')" [hidden]="!parrafo.trim()">
+            {{ parrafo }}
+          </p>
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- TAB 3: RECOMENDACIONES -->
+    <div *ngIf="mostrando === 'recomendaciones'" class="tab-content recomendaciones-tab">
+      <div class="recomendaciones-box">
+        <h3 class="recom-titulo">💡 Recomendaciones Importantes</h3>
+        
+        <div class="recom-items">
+          <div class="recom-item">
+            <span class="recom-icon">✓</span>
+            <span class="recom-text">Mantén una buena hidratación: bebe al menos 2-3 litros de agua diarios</span>
+          </div>
+          <div class="recom-item">
+            <span class="recom-icon">✓</span>
+            <span class="recom-text">Realiza actividad física de acuerdo con tus capacidades y objetivo</span>
+          </div>
+          <div class="recom-item">
+            <span class="recom-icon">✓</span>
+            <span class="recom-text">Consulta con tu nutriólogo antes de hacer cambios significativos</span>
+          </div>
+          <div class="recom-item">
+            <span class="recom-icon">✓</span>
+            <span class="recom-text">Registra tu peso y medidas regularmente para monitorear el progreso</span>
+          </div>
+          <div class="recom-item">
+            <span class="recom-icon">✓</span>
+            <span class="recom-text">Sigue el plan de manera consistente para obtener mejores resultados</span>
+          </div>
+          <div class="recom-item">
+            <span class="recom-icon">✓</span>
+            <span class="recom-text">Descansa adecuadamente (7-9 horas de sueño) para facilitar la recuperación</span>
+          </div>
+          <div class="recom-item">
+            <span class="recom-icon">✓</span>
+            <span class="recom-text">Sé paciente: los cambios significativos toman tiempo y consistencia</span>
+          </div>
+        </div>
+
+        <div class="nota-footer">
+          <p><strong>Nota:</strong> Este plan ha sido personalizado para ti. Para cambios o consultas, contáctate con tu nutriólogo.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Overlay -->
+<div class="modal-overlay" (click)="cerrarModal()"></div>

@@ -1,0 +1,615 @@
+/* ============================================================
+   MODAL OVERLAY & BASE
+   ============================================================ */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+}
+
+.dieta-detalle-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 900px;
+  width: 90%;
+  max-height: 90vh;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translate(-50%, -45%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32px 32px 24px;
+  border-bottom: 2px solid #f5f5f5;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.header-content {
+  flex: 1;
+}
+
+.modal-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px;
+  letter-spacing: -0.5px;
+}
+
+.modal-subtitle {
+  font-size: 14px;
+  color: #ff7a00;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  background: #f0f0f0;
+  color: #1a1a1a;
+}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+.tabs-container {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  background: white;
+  padding: 0 32px;
+  gap: 0;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 16px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: #ff7a00;
+}
+
+.tab-btn.active {
+  color: #ff7a00;
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff7a00, #ffb366);
+  border-radius: 3px 3px 0 0;
+}
+
+.tab-icon {
+  font-size: 18px;
+}
+
+/* ============================================================
+   MODAL BODY & CONTENT
+   ============================================================ */
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+}
+
+.tab-content {
+  animation: fadeIn 0.2s ease;
+}
+
+/* INFO TAB */
+.info-tab {
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.info-card {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #f0f0f0 100%);
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.info-card:hover {
+  border-color: #ff7a00;
+  box-shadow: 0 4px 12px rgba(255, 122, 0, 0.1);
+}
+
+.info-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-label {
+  font-size: 12px;
+  color: #999;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.actions-section {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.download-btn {
+  background: linear-gradient(135deg, #ff7a00, #ffb366);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 122, 0, 0.3);
+}
+
+.download-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 122, 0, 0.4);
+}
+
+.download-btn:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #ff7a00, #ffb366);
+  color: white;
+}
+
+/* PLAN TAB */
+.plan-tab {
+}
+
+.dia-section {
+  margin-bottom: 40px;
+}
+
+.dia-titulo {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff7a00;
+  margin: 0 0 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #ffe8cc;
+  letter-spacing: -0.5px;
+}
+
+.comidas-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.comida-card {
+  border-radius: 12px;
+  overflow: hidden;
+  border-left: 4px solid;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.comida-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.comida-card.desayuno {
+  border-left-color: #fff3cd;
+  background: #fffaf0;
+}
+
+.comida-card.almuerzo {
+  border-left-color: #27ae60;
+  background: #f0fdf4;
+}
+
+.comida-card.merienda {
+  border-left-color: #3498db;
+  background: #f0f9ff;
+}
+
+.comida-card.cena {
+  border-left-color: #9b59b6;
+  background: #faf5ff;
+}
+
+.comida-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(255, 122, 0, 0.05), rgba(255, 122, 0, 0.02));
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.comida-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.comida-titulo {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+  flex: 1;
+}
+
+.comida-kcal {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ff7a00;
+  background: rgba(255, 122, 0, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.comida-items {
+  list-style: none;
+  padding: 16px;
+  margin: 0;
+}
+
+.item {
+  font-size: 14px;
+  color: #333;
+  padding: 8px 0;
+  line-height: 1.5;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.item::before {
+  content: '• ';
+  color: #ff7a00;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.contenido-texto {
+  line-height: 1.8;
+  color: #333;
+  font-size: 14px;
+}
+
+.contenido-texto p {
+  margin: 0 0 16px;
+  padding: 12px 0;
+}
+
+/* RECOMENDACIONES TAB */
+.recomendaciones-tab {
+}
+
+.recomendaciones-box {
+  background: linear-gradient(135deg, #fff8f0 0%, #fffaf0 100%);
+  border: 2px solid #ffe8cc;
+  border-radius: 12px;
+  padding: 28px;
+}
+
+.recom-titulo {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff7a00;
+  margin: 0 0 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #ffe8cc;
+  letter-spacing: -0.5px;
+}
+
+.recom-items {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.recom-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  border-left: 3px solid #ff7a00;
+  transition: all 0.3s ease;
+}
+
+.recom-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateX(4px);
+}
+
+.recom-icon {
+  font-size: 18px;
+  color: #27ae60;
+  font-weight: 700;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.recom-text {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.5;
+}
+
+.nota-footer {
+  background: white;
+  border-left: 3px solid #3498db;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 24px;
+}
+
+.nota-footer p {
+  margin: 0;
+  font-size: 13px;
+  color: #555;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .dieta-detalle-modal {
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .modal-header {
+    padding: 20px 16px 16px;
+  }
+
+  .modal-title {
+    font-size: 22px;
+  }
+
+  .modal-subtitle {
+    font-size: 12px;
+  }
+
+  .tabs-container {
+    padding: 0 16px;
+  }
+
+  .tab-btn {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+
+  .modal-body {
+    padding: 20px 16px;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .info-card {
+    padding: 16px;
+  }
+
+  .actions-section {
+    flex-direction: column;
+  }
+
+  .action-btn {
+    width: 100%;
+  }
+
+  .recomendaciones-box {
+    padding: 20px;
+  }
+
+  .recom-item {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .comida-header {
+    flex-wrap: wrap;
+  }
+
+  .comida-titulo {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .dieta-detalle-modal {
+    width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 16px 16px 0 0;
+    top: auto;
+    bottom: 0;
+    transform: translateX(-50%);
+  }
+
+  .modal-header {
+    padding: 16px;
+  }
+
+  .modal-title {
+    font-size: 18px;
+  }
+
+  .tabs-container {
+    padding: 0;
+    overflow-x: auto;
+  }
+
+  .tab-btn {
+    padding: 12px 14px;
+    font-size: 12px;
+    min-width: fit-content;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .dia-section {
+    margin-bottom: 24px;
+  }
+
+  .dia-titulo {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .comida-header {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .comida-icon {
+    font-size: 20px;
+  }
+
+  .comida-titulo {
+    font-size: 14px;
+  }
+
+  .comida-kcal {
+    font-size: 11px;
+  }
+
+  .comida-items {
+    padding: 12px;
+  }
+
+  .item {
+    font-size: 13px;
+    padding: 6px 0;
+  }
+}
+
+/* ============================================================
+   SCROLL BAR STYLING
+   ============================================================ */
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #ff7a00;
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #e67e00;
+}
