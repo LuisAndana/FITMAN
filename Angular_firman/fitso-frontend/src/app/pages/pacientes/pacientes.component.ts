@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { DomSanitizer } from '@angular/platform-browser';
 
 interface Cliente {
   id_usuario: number;
@@ -11,11 +12,12 @@ interface Cliente {
   peso: number;
   altura: number;
   objetivo: string;
-  enfermedades: string[];
-  descripcion_medica: string;
+  enfermedades?: string[];
+  descripcion_medica?: string;
   peso_inicial: number;
   contrato_id: number;
   contrato_estado: string;
+  correo?: string;
 }
 
 interface DietaRequest {
@@ -34,6 +36,11 @@ interface DietaRequest {
   styleUrls: ['./pacientes.component.css']
 })
 export class PacientesComponent implements OnInit {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private sanitizer = inject(DomSanitizer);
+
+  // Lista de pacientes
   clientes: Cliente[] = [];
   clienteSeleccionado: Cliente | null = null;
   mostrarDetalle: boolean = false;
@@ -43,39 +50,63 @@ export class PacientesComponent implements OnInit {
   // Variables para generar dieta
   mostrarFormularioDieta: boolean = false;
   nombreDieta: string = '';
-  diasDuracion: number = 7;
+  diasDuracion: number = 30;
   caloriasObjetivo: number = 2000;
   preferencias: string = '';
   generandoDieta: boolean = false;
   dietaGenerada: any = null;
 
-  constructor(
-    private auth: AuthService,  // ✅ CAMBIO: De HttpClient a AuthService
-    private router: Router
-  ) {}
-
   ngOnInit(): void {
+    console.log('🔄 PacientesComponent iniciando...');
     this.cargarClientes();
   }
 
   /**
-   * Carga la lista de clientes del nutriólogo actual
-   * ✅ AHORA USA AuthService
+   * Carga la lista de clientes/pacientes del nutriólogo actual
    */
   cargarClientes(): void {
     this.cargando = true;
     this.error = '';
+    console.log('📋 Cargando clientes...');
 
-    // ✅ CAMBIO: Usar AuthService.getNutriClients() en lugar de http.get()
-    this.auth.getNutriClients().subscribe({
-      next: (data) => {
-        console.log('✅ Clientes cargados:', data);
-        this.clientes = Array.isArray(data) ? data : [];
+    this.authService.getNutriClients().subscribe({
+      next: (data: any) => {
+        console.log('✅ Datos recibidos del backend:', data);
+        
+        // Manejar diferentes formatos de respuesta
+        if (Array.isArray(data)) {
+          this.clientes = data;
+        } else if (data && typeof data === 'object') {
+          // Si es un objeto, buscar la propiedad que contiene el array
+          const clientes = data.clientes || data.data || data.usuarios || [];
+          this.clientes = Array.isArray(clientes) ? clientes : [];
+        } else {
+          this.clientes = [];
+        }
+
+        console.log(`✅ ${this.clientes.length} clientes cargados`);
         this.cargando = false;
+
+        // Si no hay clientes, mostrar mensaje
+        if (this.clientes.length === 0) {
+          console.warn('⚠️ No hay clientes registrados');
+        }
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('❌ Error al cargar clientes:', err);
-        this.error = 'Error al cargar la lista de clientes. Verifica tu conexión.';
+        
+        // Mostrar mensaje de error detallado
+        if (err.status === 404) {
+          this.error = 'Endpoint no encontrado. Verifica la configuración del servidor.';
+        } else if (err.status === 401) {
+          this.error = 'Sesión expirada. Por favor, vuelve a iniciar sesión.';
+          this.router.navigate(['/login']);
+        } else if (err.status === 403) {
+          this.error = 'No tienes permiso para acceder a esta información.';
+        } else {
+          this.error = `Error al cargar pacientes: ${err.statusText || err.message || 'Error desconocido'}`;
+        }
+        
         this.cargando = false;
       }
     });
@@ -85,6 +116,7 @@ export class PacientesComponent implements OnInit {
    * Abre el perfil detallado de un cliente
    */
   abrirPerfilCliente(cliente: Cliente): void {
+    console.log('👤 Abriendo perfil de cliente:', cliente.nombre);
     this.clienteSeleccionado = cliente;
     this.mostrarDetalle = true;
     this.mostrarFormularioDieta = false;
@@ -95,10 +127,12 @@ export class PacientesComponent implements OnInit {
    * Cierra el panel de detalle
    */
   cerrarDetalle(): void {
+    console.log('❌ Cerrando detalle');
     this.mostrarDetalle = false;
     this.clienteSeleccionado = null;
     this.mostrarFormularioDieta = false;
     this.dietaGenerada = null;
+    this.resetFormulario();
   }
 
   /**
@@ -106,7 +140,7 @@ export class PacientesComponent implements OnInit {
    */
   abrirFormularioDieta(): void {
     if (this.clienteSeleccionado) {
-      // Calcular calorías recomendadas basadas en el objetivo
+      console.log('📝 Abriendo formulario de dieta para:', this.clienteSeleccionado.nombre);
       const caloriasRecomendadas = this.calcularCaloriasRecomendadas(
         this.clienteSeleccionado
       );
@@ -119,20 +153,19 @@ export class PacientesComponent implements OnInit {
    * Calcula calorías recomendadas basadas en características del cliente
    */
   private calcularCaloriasRecomendadas(cliente: Cliente): number {
-    // Fórmula simple de Mifflin-St Jeor para metabolismo basal
     let mb = 0;
     
     if (cliente.peso && cliente.altura && cliente.edad) {
+      // Fórmula Mifflin-St Jeor
       mb = 10 * cliente.peso + 6.25 * (cliente.altura * 100) - 5 * cliente.edad + 5;
       
-      // Ajustar según objetivo
       switch (cliente.objetivo) {
         case 'bajar_peso':
-          return Math.round(mb * 1.375 * 0.85); // Déficit calórico
+          return Math.round(mb * 1.375 * 0.85);
         case 'mantener':
-          return Math.round(mb * 1.55); // Mantenimiento moderado
+          return Math.round(mb * 1.55);
         case 'aumentar_masa':
-          return Math.round(mb * 1.55 * 1.15); // Superávit calórico
+          return Math.round(mb * 1.55 * 1.15);
         default:
           return Math.round(mb * 1.55);
       }
@@ -143,16 +176,17 @@ export class PacientesComponent implements OnInit {
 
   /**
    * Genera una dieta usando IA
-   * ✅ AHORA USA AuthService
    */
   generarDieta(): void {
     if (!this.clienteSeleccionado || !this.nombreDieta) {
       this.error = 'Por favor completa todos los campos requeridos';
+      console.warn('⚠️ Campos incompletos');
       return;
     }
 
     this.generandoDieta = true;
     this.error = '';
+    console.log('🤖 Generando dieta...');
 
     const request: DietaRequest = {
       id_cliente: this.clienteSeleccionado.id_usuario,
@@ -162,16 +196,15 @@ export class PacientesComponent implements OnInit {
       preferencias: this.preferencias
     };
 
-    // ✅ CAMBIO: Necesitamos crear un método en AuthService para esto
-    // Por ahora, usamos directamente el http que ofrece AuthService
-    // Agregamos el método generar dieta a AuthService
-    
-    // Si no quieres modificar AuthService, puedes hacer esto temporalmente:
-    const token = this.auth.getToken();
-    const headers = { 'Authorization': `Bearer ${token}` };
+    const token = this.authService.getToken();
 
-    // Usando fetch o HttpClient directamente (mejor agregar a AuthService)
-    fetch('http://localhost:8000/api/clientes/generar-dieta-ia', {
+    if (!token) {
+      this.error = 'No tienes sesión activa. Por favor, inicia sesión nuevamente.';
+      this.generandoDieta = false;
+      return;
+    }
+
+    fetch('http://127.0.0.1:8000/api/clientes/generar-dieta-ia', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -179,12 +212,18 @@ export class PacientesComponent implements OnInit {
       },
       body: JSON.stringify(request)
     })
-    .then(res => res.json())
+    .then(res => {
+      console.log('📡 Respuesta del servidor:', res.status);
+      if (!res.ok) {
+        throw new Error(`Error ${res.status}: ${res.statusText}`);
+      }
+      return res.json();
+    })
     .then((response: any) => {
+      console.log('✅ Dieta generada exitosamente:', response);
       this.dietaGenerada = response;
       this.mostrarFormularioDieta = false;
       this.generandoDieta = false;
-      console.log('✅ Dieta generada exitosamente:', response);
     })
     .catch((err) => {
       console.error('❌ Error al generar dieta:', err);
@@ -194,11 +233,11 @@ export class PacientesComponent implements OnInit {
   }
 
   /**
-   * Guarda la dieta generada para uso posterior
+   * Guarda la dieta y navega al dashboard
    */
   guardarDieta(): void {
     if (this.dietaGenerada) {
-      // La dieta ya está guardada en la BD desde el endpoint
+      console.log('💾 Guardando dieta y navegando...');
       this.router.navigate(['/dashboard']);
     }
   }
@@ -207,9 +246,17 @@ export class PacientesComponent implements OnInit {
    * Cancela la generación de dieta
    */
   cancelarFormulario(): void {
+    console.log('❌ Cancelando formulario');
+    this.resetFormulario();
+  }
+
+  /**
+   * Reset formulario
+   */
+  private resetFormulario(): void {
     this.mostrarFormularioDieta = false;
     this.nombreDieta = '';
-    this.diasDuracion = 7;
+    this.diasDuracion = 30;
     this.caloriasObjetivo = 2000;
     this.preferencias = '';
     this.error = '';
@@ -220,7 +267,8 @@ export class PacientesComponent implements OnInit {
    */
   calcularIMC(cliente: Cliente): number | null {
     if (cliente.peso && cliente.altura) {
-      return Math.round((cliente.peso / (cliente.altura * cliente.altura)) * 100) / 100;
+      const imc = cliente.peso / (cliente.altura * cliente.altura);
+      return Math.round(imc * 100) / 100;
     }
     return null;
   }
@@ -236,14 +284,71 @@ export class PacientesComponent implements OnInit {
   }
 
   /**
-   * Formatea el objetivo de forma legible
+   * Formatea el objetivo con emoji
    */
   formatearObjetivo(objetivo: string): string {
     const objetivos: { [key: string]: string } = {
-      'bajar_peso': 'Bajar de peso',
-      'mantener': 'Mantener peso',
-      'aumentar_masa': 'Aumentar masa muscular'
+      'bajar_peso': '📉 Bajar de peso',
+      'mantener': '⚖️ Mantener peso',
+      'aumentar_masa': '💪 Aumentar masa muscular',
+      'definicion': '✨ Definición',
+      'volumen': '🏋️ Volumen',
+      'saludable': '🥗 Plan saludable',
+      'perdida_grasa': '🔥 Pérdida de grasa'
     };
     return objetivos[objetivo] || objetivo;
+  }
+
+  /**
+   * Formatea el contenido de la dieta a HTML elegante
+   */
+  formatearDietaHTML(contenido: string): any {
+    if (!contenido) return '';
+
+    let html = contenido;
+
+    // Remover asteriscos feos
+    html = html.replace(/\*\*/g, '');
+    html = html.replace(/\*/g, '');
+
+    // Convertir ### a h3
+    html = html.replace(/###\s+(.+?)(\n|$)/g, '<h3>$1</h3>');
+
+    // Convertir ## a h4
+    html = html.replace(/##\s+(.+?)(\n|$)/g, '<h4>$1</h4>');
+
+    // Convertir - a puntos de lista
+    html = html.replace(/^-\s+(.+?)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>.*?<\/li>)/s, '<ul>$1</ul>');
+
+    // Separar secciones por saltos de línea doble
+    const secciones = html.split('\n\n').map(s => s.trim()).filter(s => s);
+    
+    html = secciones.map(seccion => {
+      if (seccion.startsWith('<h3>')) {
+        return `<div class="dieta-day">${seccion}</div>`;
+      }
+      if (seccion.startsWith('<h4>')) {
+        return `<div class="dieta-meal">${seccion}</div>`;
+      }
+      if (seccion.startsWith('<ul>')) {
+        return `<div class="meal-items">${seccion}</div>`;
+      }
+      if (seccion.trim()) {
+        return `<p>${seccion}</p>`;
+      }
+      return '';
+    }).join('');
+
+    // Retornar como HTML seguro para Angular
+    return this.sanitizer.sanitize(1, html) || '';
+  }
+
+  /**
+   * Retry después de error
+   */
+  reintentar(): void {
+    console.log('🔄 Reintentando...');
+    this.cargarClientes();
   }
 }

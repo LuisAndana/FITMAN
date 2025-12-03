@@ -1,0 +1,222 @@
+<div class="dietas-container">
+  <!-- Header con estilo FitMan -->
+  <div class="header-section">
+    <div class="header-content">
+      <h1 class="header-title">Mis Planes Nutricionales</h1>
+      <p class="header-subtitle">Diseñados especialmente para ti por expertos en nutrición</p>
+    </div>
+  </div>
+
+  <!-- Estadísticas en tarjetas -->
+  <div *ngIf="!cargando && (dietasActivas > 0 || dietasVencidas > 0)" class="stats-grid">
+    <div class="stat-card active">
+      <div class="stat-icon">✅</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ dietasActivas }}</span>
+        <span class="stat-label">Planes Activos</span>
+      </div>
+    </div>
+
+    <div class="stat-card warning" *ngIf="dietasVencidas > 0">
+      <div class="stat-icon">⏰</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ dietasVencidas }}</span>
+        <span class="stat-label">Por Renovar</span>
+      </div>
+    </div>
+
+    <div class="stat-card info" *ngIf="proxima_vencimiento">
+      <div class="stat-icon">📅</div>
+      <div class="stat-info">
+        <span class="stat-label">Próximo Vencimiento</span>
+        <span class="stat-date">{{ formatearFecha(proxima_vencimiento) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado de carga -->
+  <div *ngIf="cargando" class="loading-container">
+    <div class="spinner"></div>
+    <p>Cargando tus planes nutricionales...</p>
+  </div>
+
+  <!-- Mensaje de error -->
+  <div *ngIf="error && !cargando" class="error-container">
+    <div class="error-content">
+      <span class="error-icon">⚠️</span>
+      <div class="error-text">
+        <h3>Oops, algo salió mal</h3>
+        <p>{{ error }}</p>
+      </div>
+      <button (click)="cargarDietas()" class="retry-btn">Reintentar</button>
+    </div>
+  </div>
+
+  <!-- Grid de dietas -->
+  <div *ngIf="!cargando && dietas.length > 0" class="dietas-grid">
+    <div 
+      *ngFor="let dieta of dietas" 
+      class="diet-card"
+      [class.expired]="dieta.estado === 'vencida'"
+      (click)="abrirDetalle(dieta)"
+    >
+      <!-- Estado Badge -->
+      <div class="status-badge" [style.background-color]="getEstadoDieta(dieta).color">
+        <span class="badge-icon">{{ getEstadoDieta(dieta).icono }}</span>
+        <span class="badge-text">{{ getEstadoDieta(dieta).estado }}</span>
+      </div>
+
+      <!-- Card Body -->
+      <div class="card-body">
+        <div class="diet-header" [style.border-left-color]="getColorObjetivo(dieta.objetivo)">
+          <h3 class="diet-name">{{ dieta.nombre }}</h3>
+          <span class="diet-goal">{{ formatearObjetivo(dieta.objetivo) }}</span>
+        </div>
+
+        <div class="diet-info">
+          <div class="info-item">
+            <span class="info-icon">🔥</span>
+            <div>
+              <span class="info-label">Calorías</span>
+              <span class="info-value">{{ dieta.calorias_totales }} kcal</span>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <span class="info-icon">⏱️</span>
+            <div>
+              <span class="info-label">Duración</span>
+              <span class="info-value">{{ dieta.dias_duracion || 30 }} días</span>
+            </div>
+          </div>
+
+          <div class="info-item" *ngIf="dieta.dias_restantes !== undefined">
+            <span class="info-icon">⏳</span>
+            <div>
+              <span class="info-label">Quedan</span>
+              <span class="info-value" [class.alert]="(dieta.dias_restantes || 0) <= 3">
+                {{ dieta.dias_restantes }} días
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="diet-preview">
+          {{ dieta.contenido.substring(0, 100) }}...
+        </div>
+
+        <button class="view-btn" (click)="abrirDetalle(dieta); $event.stopPropagation()">
+          Ver Detalles Completos
+          <span class="arrow">→</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado vacío -->
+  <div *ngIf="!cargando && dietas.length === 0" class="empty-state">
+    <div class="empty-icon">🍽️</div>
+    <h2>Sin planes nutricionales</h2>
+    <p>Aún no tienes planes asignados. Contacta a tu nutriólogo para crear uno.</p>
+  </div>
+
+  <!-- Modal Detalle -->
+  <div *ngIf="mostrarDetalle && dietaSeleccionada" class="modal-overlay" (click)="cerrarDetalle()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div class="modal-header-content">
+          <h2>{{ dietaSeleccionada.nombre }}</h2>
+          <p class="modal-goal">{{ formatearObjetivo(dietaSeleccionada.objetivo) }}</p>
+        </div>
+        <button class="close-modal" (click)="cerrarDetalle()">
+          <span>✕</span>
+        </button>
+      </div>
+
+      <!-- Modal Scroll Content -->
+      <div class="modal-scroll">
+        
+        <!-- Información Principal -->
+        <div class="info-section">
+          <h3 class="section-title">Información del Plan</h3>
+          <div class="info-grid">
+            <div class="info-card">
+              <span class="card-label">Objetivo</span>
+              <span class="card-value">{{ formatearObjetivo(dietaSeleccionada.objetivo) }}</span>
+            </div>
+            <div class="info-card">
+              <span class="card-label">Calorías Diarias</span>
+              <span class="card-value highlight">{{ dietaSeleccionada.calorias_totales }} kcal</span>
+            </div>
+            <div class="info-card">
+              <span class="card-label">Duración</span>
+              <span class="card-value">{{ dietaSeleccionada.dias_duracion || 30 }} días</span>
+            </div>
+            <div class="info-card">
+              <span class="card-label">Creado</span>
+              <span class="card-value">{{ formatearFecha(dietaSeleccionada.fecha_creacion) }}</span>
+            </div>
+            <div class="info-card" *ngIf="dietaSeleccionada.fecha_vencimiento">
+              <span class="card-label">Vencimiento</span>
+              <span class="card-value">{{ formatearFecha(dietaSeleccionada.fecha_vencimiento) }}</span>
+            </div>
+            <div class="info-card" *ngIf="dietaSeleccionada.dias_restantes !== undefined">
+              <span class="card-label">Días Restantes</span>
+              <span class="card-value" [class.alert]="(dietaSeleccionada.dias_restantes || 0) <= 3">
+                {{ dietaSeleccionada.dias_restantes }} días
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alertas -->
+        <div *ngIf="(dietaSeleccionada.dias_restantes || 0) <= 3 && dietaSeleccionada.estado !== 'vencida'" class="alert warning">
+          <span class="alert-icon">⏰</span>
+          <div class="alert-content">
+            <h4>Plan próximo a vencer</h4>
+            <p>Contacta a tu nutriólogo para renovarlo a tiempo</p>
+          </div>
+        </div>
+
+        <div *ngIf="dietaSeleccionada.estado === 'vencida'" class="alert expired">
+          <span class="alert-icon">❌</span>
+          <div class="alert-content">
+            <h4>Plan vencido</h4>
+            <p>Solicita un nuevo plan a tu nutriólogo</p>
+          </div>
+        </div>
+
+        <!-- Contenido del Plan -->
+        <div class="content-section">
+          <h3 class="section-title">Plan Detallado</h3>
+          <div class="plan-content">
+            {{ dietaSeleccionada.contenido }}
+          </div>
+        </div>
+
+        <!-- Recomendaciones -->
+        <div class="recommendations-section">
+          <h3 class="section-title">Recomendaciones Importantes</h3>
+          <ul class="recommendations-list">
+            <li>Mantén una buena hidratación: bebe al menos 2 litros de agua al día</li>
+            <li>Realiza actividad física de acuerdo con tus capacidades</li>
+            <li>Consulta con tu nutriólogo antes de hacer cambios significativos</li>
+            <li>Registra tu peso y medidas regularmente para monitorear el progreso</li>
+            <li>Sigue el plan de manera consistente para obtener mejores resultados</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button class="btn-download" (click)="descargarDietaPDF(dietaSeleccionada)" [disabled]="descargandoPDF">
+          <span *ngIf="!descargandoPDF">📥 Descargar PDF</span>
+          <span *ngIf="descargandoPDF">⏳ Descargando...</span>
+        </button>
+        <button class="btn-close" (click)="cerrarDetalle()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>

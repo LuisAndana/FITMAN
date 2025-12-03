@@ -33,6 +33,7 @@
     "@angular/ssr": "^20.3.6",
     "chart.js": "^4.5.1",
     "express": "^5.1.0",
+    "pdfmake": "^0.2.20",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "^0.15.1"
@@ -44,6 +45,7 @@
     "@types/express": "^5.0.1",
     "@types/jasmine": "~5.1.0",
     "@types/node": "^20.17.19",
+    "@types/pdfmake": "^0.2.12",
     "jasmine-core": "~5.9.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",

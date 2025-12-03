@@ -39,6 +39,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/progreso/progreso.component').then(m => m.ProgresoComponent),
     canActivate: [AuthGuard, ClienteGuard]
   },
+  {
+    path: 'dietas',
+    loadComponent: () => import('./pages/dietas/dietas-cliente.component').then(m => m.DietasClienteComponent),
+    canActivate: [AuthGuard, ClienteGuard]
+  },
 
   // ====== NUTRIÓLOGO ======
   {
