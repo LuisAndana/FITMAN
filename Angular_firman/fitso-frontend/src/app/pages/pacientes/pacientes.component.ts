@@ -236,11 +236,21 @@ export class PacientesComponent implements OnInit {
    * Guarda la dieta y navega al dashboard
    */
   guardarDieta(): void {
-    if (this.dietaGenerada) {
-      console.log('💾 Guardando dieta y navegando...');
-      this.router.navigate(['/dashboard']);
-    }
+  if (this.dietaGenerada) {
+    console.log('💾 Dieta guardada correctamente');
+
+    // TODO: Aquí puedes llamar al servicio para guardarla definitivamente si lo deseas
+
+    // Cerrar modal y limpiar formulario
+    this.mostrarDetalle = false;
+    this.dietaGenerada = null;
+    this.resetFormulario();
+
+    // Refrescar lista de pacientes si hace falta
+    this.cargarClientes();
   }
+}
+
 
   /**
    * Cancela la generación de dieta
@@ -299,50 +309,8 @@ export class PacientesComponent implements OnInit {
     return objetivos[objetivo] || objetivo;
   }
 
-  /**
-   * Formatea el contenido de la dieta a HTML elegante
-   */
-  formatearDietaHTML(contenido: string): any {
-    if (!contenido) return '';
-
-    let html = contenido;
-
-    // Remover asteriscos feos
-    html = html.replace(/\*\*/g, '');
-    html = html.replace(/\*/g, '');
-
-    // Convertir ### a h3
-    html = html.replace(/###\s+(.+?)(\n|$)/g, '<h3>$1</h3>');
-
-    // Convertir ## a h4
-    html = html.replace(/##\s+(.+?)(\n|$)/g, '<h4>$1</h4>');
-
-    // Convertir - a puntos de lista
-    html = html.replace(/^-\s+(.+?)$/gm, '<li>$1</li>');
-    html = html.replace(/(<li>.*?<\/li>)/s, '<ul>$1</ul>');
-
-    // Separar secciones por saltos de línea doble
-    const secciones = html.split('\n\n').map(s => s.trim()).filter(s => s);
-    
-    html = secciones.map(seccion => {
-      if (seccion.startsWith('<h3>')) {
-        return `<div class="dieta-day">${seccion}</div>`;
-      }
-      if (seccion.startsWith('<h4>')) {
-        return `<div class="dieta-meal">${seccion}</div>`;
-      }
-      if (seccion.startsWith('<ul>')) {
-        return `<div class="meal-items">${seccion}</div>`;
-      }
-      if (seccion.trim()) {
-        return `<p>${seccion}</p>`;
-      }
-      return '';
-    }).join('');
-
-    // Retornar como HTML seguro para Angular
-    return this.sanitizer.sanitize(1, html) || '';
-  }
+  
+  
 
   /**
    * Retry después de error

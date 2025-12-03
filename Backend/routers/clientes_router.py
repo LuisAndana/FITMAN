@@ -300,7 +300,12 @@ async def generar_dieta_con_ia(
             calorias_totales=dieta_request.calorias_objetivo,
             dias_duracion=dieta_request.dias_duracion
         )
-
+        from services.pdf_generator import generar_pdf_dieta
+        generar_pdf_dieta(
+            nueva_dieta.id_dieta,
+            nueva_dieta.nombre,
+            dieta_contenido
+        )
         logger.info(f"✅ Dieta guardada en BD con ID={nueva_dieta.id_dieta}")
 
         dias_restantes = nueva_dieta.dias_restantes()
@@ -622,6 +627,26 @@ async def actualizar_dieta_vencida(
             detail=str(e)
         )
 
+from fastapi.responses import FileResponse
+
+@router.get("/descargar-pdf/{dieta_id}")
+async def descargar_pdf(
+    dieta_id: int,
+    current_user: Annotated[Usuario, Depends(get_current_user)]
+):
+    ruta_pdf = f"pdfs/dieta_{dieta_id}.pdf"
+
+    if not os.path.exists(ruta_pdf):
+        raise HTTPException(
+            status_code=404,
+            detail="El PDF no existe para esta dieta."
+        )
+
+    return FileResponse(
+        ruta_pdf,
+        media_type="application/pdf",
+        filename=f"dieta_{dieta_id}.pdf"
+    )
 
 # ============================================================
 # TEST

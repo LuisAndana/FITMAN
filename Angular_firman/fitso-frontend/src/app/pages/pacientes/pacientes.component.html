@@ -1,5 +1,5 @@
 <div class="pacientes-container">
-  <!-- Header Principal -->
+  <!-- Header Principal - Concordancia con diseño del proyecto -->
   <div class="header-section">
     <div class="header-content">
       <h1 class="header-title">👥 Mis Pacientes</h1>
@@ -13,7 +13,7 @@
     <p>Cargando pacientes...</p>
   </div>
 
-  <!-- Error -->
+  <!-- Error con mejor visualización -->
   <div *ngIf="error && !cargando" class="error-banner">
     <div class="error-content">
       <span class="error-icon">⚠️</span>
@@ -30,17 +30,16 @@
       *ngFor="let cliente of clientes" 
       class="paciente-card"
       (click)="abrirPerfilCliente(cliente)"
+      [class.selected]="clienteSeleccionado?.id_usuario === cliente.id_usuario"
     >
-      <!-- Header Card -->
       <div class="card-header">
         <div class="avatar">{{ cliente.nombre.charAt(0).toUpperCase() }}</div>
         <div class="header-info">
           <h3 class="paciente-nombre">{{ cliente.nombre }}</h3>
-          <p class="paciente-email">{{ cliente.correo || 'Sin email' }}</p>
+          <p class="paciente-objetivo">{{ formatearObjetivo(cliente.objetivo) }}</p>
         </div>
       </div>
 
-      <!-- Stats -->
       <div class="card-stats">
         <div class="stat-item">
           <span class="stat-icon">👤</span>
@@ -59,18 +58,10 @@
         </div>
       </div>
 
-      <!-- Objetivo -->
-      <div class="card-objetivo">
-        <span class="objetivo-icon">🎯</span>
-        <span class="objetivo-text">{{ formatearObjetivo(cliente.objetivo) }}</span>
-      </div>
-
-      <!-- Estado -->
       <div class="card-footer">
         <span class="status-badge" [class]="'status-' + cliente.contrato_estado?.toLowerCase()">
-          {{ cliente.contrato_estado || 'Sin contrato' }}
+          {{ cliente.contrato_estado }}
         </span>
-        <span class="btn-abrir">Ver más →</span>
       </div>
     </div>
   </div>
@@ -90,7 +81,7 @@
       <div class="modal-header">
         <div class="modal-header-content">
           <h2>{{ clienteSeleccionado.nombre }}</h2>
-          <p class="modal-subtitle">{{ clienteSeleccionado.correo }}</p>
+          <p class="modal-subtitle">{{ formatearObjetivo(clienteSeleccionado.objetivo) }}</p>
         </div>
         <button class="close-btn" (click)="cerrarDetalle()">✕</button>
       </div>
@@ -232,45 +223,47 @@
           </form>
         </div>
 
-        <!-- DIETA GENERADA -->
+            <!-- DIETA GENERADA - FORMATO EXACTO DEL NUTRIÓLOGO -->
         <div *ngIf="dietaGenerada && !mostrarFormularioDieta" class="dieta-container">
-          <div class="dieta-header">
+        <div class="dieta-header">
             <h3>✅ Dieta Generada</h3>
             <p class="dieta-titulo">{{ dietaGenerada.nombre }}</p>
-          </div>
+        </div>
 
-          <!-- Info Rápida -->
-          <div class="dieta-info-quick">
+        <!-- Info Rápida -->
+        <div class="dieta-info-quick">
             <div class="quick-item">
-              <span class="quick-label">🔥 Calorías</span>
-              <span class="quick-value">{{ dietaGenerada.calorias_totales }} kcal/día</span>
+            <span class="quick-label">🔥 Calorías</span>
+            <span class="quick-value">{{ dietaGenerada.calorias_totales }} kcal/día</span>
             </div>
             <div class="quick-item">
-              <span class="quick-label">🎯 Objetivo</span>
-              <span class="quick-value">{{ formatearObjetivo(dietaGenerada.objetivo) }}</span>
+            <span class="quick-label">🎯 Objetivo</span>
+            <span class="quick-value">{{ formatearObjetivo(dietaGenerada.objetivo) }}</span>
             </div>
             <div class="quick-item">
-              <span class="quick-label">📅 Duración</span>
-              <span class="quick-value">{{ diasDuracion }} días</span>
+            <span class="quick-label">📅 Duración</span>
+            <span class="quick-value">{{ diasDuracion }} días</span>
             </div>
-          </div>
+        </div>
 
-          <!-- Contenido de Dieta Formateado -->
-          <div class="dieta-contenido-formatted">
-            <div class="dieta-text" [innerHTML]="formatearDietaHTML(dietaGenerada.contenido)"></div>
-          </div>
+        <!-- CONTENIDO ORIGINAL SIN MODIFICAR -->
+        <div class="dieta-contenido-formatted">
+            <pre class="dieta-texto">
+        {{ dietaGenerada.contenido }}
+            </pre>
+        </div>
 
-          <!-- Acciones -->
-          <div class="modal-actions">
+        <!-- Acciones -->
+        <div class="modal-actions">
             <button class="btn btn-primary" (click)="guardarDieta()">
-              💾 Guardar y Cerrar
+            💾 Guardar y Cerrar
             </button>
             <button class="btn btn-secondary" (click)="abrirFormularioDieta()">
-              🔄 Nueva Dieta
+            🔄 Nueva Dieta
             </button>
-          </div>
         </div>
-      </div>
+        </div>
+
 
       <!-- Modal Footer -->
       <div *ngIf="!mostrarFormularioDieta && !dietaGenerada" class="modal-footer">

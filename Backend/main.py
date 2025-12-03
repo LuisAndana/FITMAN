@@ -64,8 +64,7 @@ from config.database import Base, engine
 
 # 🔹 Carga todos los modelos UNA sola vez (evita redefinir tablas)
 import models  # <- usa models/__init__.py
-from routers import users, auth, contratos, clientes
-
+from routers import users, auth, contratos, clientes, catalogo_router
 # 🔹 ✅ NUEVO: Verificar que core/deps existe y funciona
 try:
     from core.deps import get_current_user, get_db, create_access_token
@@ -133,6 +132,9 @@ app.include_router(clientes.router)
 # ✅ contratos.router: Se registra con /api
 # Endpoints: /api/contratos/crear-payment-intent, etc.
 app.include_router(contratos.router, prefix="/api")
+
+# ✅ catalogo_router: Catálogos (enfermedades, etc.)
+app.include_router(catalogo_router.router)
 
 # ===============================================
 # Puente /nutriologos/validacion → /users/nutriologos/validacion
