@@ -7,29 +7,33 @@
     </div>
   </div>
 
+  <!-- Botón Calendario Flotante -->
+  <div class="calendario-floating-btn" (click)="abrirCalendario()">
+    <div class="calendario-icon">📅</div>
+    <div class="calendario-text">
+      <span class="calendario-label">Próximo Vencimiento</span>
+      <span class="calendario-date" *ngIf="proxima_vencimiento">{{ formatearFecha(proxima_vencimiento) }}</span>
+    </div>
+    <div class="calendario-arrow">→</div>
+  </div>
+
   <!-- Estadísticas en tarjetas -->
-  <div *ngIf="!cargando && (dietasActivas > 0 || dietasVencidas > 0)" class="stats-grid">
-    <div class="stat-card active">
-      <div class="stat-icon">✅</div>
-      <div class="stat-info">
-        <span class="stat-value">{{ dietasActivas }}</span>
-        <span class="stat-label">Planes Activos</span>
+  <div *ngIf="!cargando && (dietasActivas > 0 || dietasVencidas > 0)" class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-card active">
+        <div class="stat-icon">✅</div>
+        <div class="stat-info">
+          <span class="stat-value">{{ dietasActivas }}</span>
+          <span class="stat-label">Planes Activos</span>
+        </div>
       </div>
-    </div>
 
-    <div class="stat-card warning" *ngIf="dietasVencidas > 0">
-      <div class="stat-icon">⏰</div>
-      <div class="stat-info">
-        <span class="stat-value">{{ dietasVencidas }}</span>
-        <span class="stat-label">Por Renovar</span>
-      </div>
-    </div>
-
-    <div class="stat-card info" *ngIf="proxima_vencimiento">
-      <div class="stat-icon">📅</div>
-      <div class="stat-info">
-        <span class="stat-label">Próximo Vencimiento</span>
-        <span class="stat-date">{{ formatearFecha(proxima_vencimiento) }}</span>
+      <div class="stat-card warning" *ngIf="dietasVencidas > 0">
+        <div class="stat-icon">⏰</div>
+        <div class="stat-info">
+          <span class="stat-value">{{ dietasVencidas }}</span>
+          <span class="stat-label">Por Renovar</span>
+        </div>
       </div>
     </div>
   </div>
@@ -52,10 +56,35 @@
     </div>
   </div>
 
+  <!-- Filtros de Dietas -->
+<div class="filtros-container">
+  <button 
+    class="filtro-btn"
+    [class.active]="filtro === 'dia'"
+    (click)="filtro = 'dia'; aplicarFiltro()">
+    Hoy
+  </button>
+
+  <button 
+    class="filtro-btn"
+    [class.active]="filtro === 'semana'"
+    (click)="filtro = 'semana'; aplicarFiltro()">
+    Semana
+  </button>
+
+  <button 
+    class="filtro-btn"
+    [class.active]="filtro === 'mes'"
+    (click)="filtro = 'mes'; aplicarFiltro()">
+    Mes
+  </button>
+</div>
+
+
   <!-- Grid de dietas -->
-  <div *ngIf="!cargando && dietas.length > 0" class="dietas-grid">
+  <div *ngIf="!cargando && dietasFiltradas.length > 0" class="dietas-grid">
     <div 
-      *ngFor="let dieta of dietas" 
+      *ngFor="let dieta of dietasFiltradas"
       class="diet-card"
       [class.expired]="dieta.estado === 'vencida'"
       (click)="abrirDetalleDieta(dieta)"
@@ -114,7 +143,7 @@
   </div>
 
   <!-- Estado vacío -->
-  <div *ngIf="!cargando && dietas.length === 0" class="empty-state">
+  <div *ngIf="!cargando && dietasFiltradas.length === 0" class="empty-state">
     <div class="empty-icon">🍽️</div>
     <h2>Sin planes nutricionales</h2>
     <p>Aún no tienes planes asignados. Contacta a tu nutriólogo para crear uno.</p>
@@ -220,11 +249,18 @@
     </div>
   </div>
 
-  <!-- MODAL PROFESIONAL - FUERA DEL CONTENEDOR -->
+  <!-- MODAL PROFESIONAL - COMPONENTE app-dieta-detalle -->
   <app-dieta-detalle 
     *ngIf="mostrarDetalleDieta && dietaSeleccionada"
     [dieta]="dietaSeleccionada"
     (cerrar)="cerrarDetalleDieta()"
     (descargarPDF)="descargarDietaPDF($event)">
   </app-dieta-detalle>
+
+  <!-- MODAL DEL CALENDARIO -->
+  <app-modal-calendario 
+    [isOpen]="mostrarCalendario"
+    [dietas]="dietas"
+    (cerrarModal)="cerrarCalendario()">
+  </app-modal-calendario>
 </div>

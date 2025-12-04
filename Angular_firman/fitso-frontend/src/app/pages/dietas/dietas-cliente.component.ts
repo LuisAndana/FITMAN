@@ -3,28 +3,38 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { DietaService, Dieta, EstadoDietas } from '../../services/dieta.service';
 import { DietaDetalleComponent } from '../../pages/dieta-detalle/dieta-detalle.component';
+import { ModalCalendarioComponent } from '../../pages/dieta-calendario/dieta-calendario.component';
+import { FiltroDietasService } from '../../services/filtro-dietas.service';
+
+
 
 @Component({
   selector: 'app-dietas-cliente',
   standalone: true,
-  imports: [CommonModule, RouterModule, DietaDetalleComponent],
+  imports: [CommonModule, RouterModule, DietaDetalleComponent, ModalCalendarioComponent],
   templateUrl: './dietas-cliente.component.html',
   styleUrls: ['./dietas-cliente.component.css']
 })
 export class DietasClienteComponent implements OnInit {
   private dietaService = inject(DietaService);
+  private filtroDietas = inject(FiltroDietasService);
+
+
+  filtro: 'dia' | 'semana' | 'mes' = 'mes';
+  fechaFiltro = new Date();
+  dietasFiltradas: Dieta[] = [];
 
   dietas: Dieta[] = [];
   dietaSeleccionada: Dieta | null = null;
   cargando = true;
   error = '';
-  mostrarDetalle = false;
   descargandoPDF = false;
   
-  // ✅ NUEVO: Variables para modal profesional de dieta
-  dietaSeleccionadaProfesional: Dieta | null = null;
-  mostrarModalProfesional = false;
+  // Variables para modal detalle
   mostrarDetalleDieta = false;
+  
+  // Variable para modal del calendario
+  mostrarCalendario = false;
   
   // Estadísticas
   dietasActivas = 0;
@@ -36,23 +46,29 @@ export class DietasClienteComponent implements OnInit {
     this.obtenerEstadoDietas();
   }
 
-  cargarDietas(): void {
-    this.cargando = true;
-    this.error = '';
+cargarDietas(): void {
+  this.cargando = true;
+  this.error = '';
 
-    this.dietaService.obtenerDietasAsignadas().subscribe({
-      next: (dietas: Dieta[]) => {
-        console.log('✅ Dietas cargadas:', dietas);
-        this.dietas = Array.isArray(dietas) ? dietas : [];
-        this.cargando = false;
-      },
-      error: (err: any) => {
-        console.error('❌ Error al cargar dietas:', err);
-        this.error = 'No pudimos cargar tus dietas. Intenta de nuevo.';
-        this.cargando = false;
-      }
-    });
-  }
+  this.dietaService.obtenerDietasAsignadas().subscribe({
+    next: (dietas: Dieta[]) => {
+      console.log('✅ Dietas cargadas:', dietas);
+      
+      this.dietas = Array.isArray(dietas) ? dietas : [];
+      
+      // 🔥 APLICAR FILTRO
+      this.aplicarFiltro();
+
+      this.cargando = false;
+    },
+    error: (err: any) => {
+      console.error('❌ Error al cargar dietas:', err);
+      this.error = 'No pudimos cargar tus dietas. Intenta de nuevo.';
+      this.cargando = false;
+    }
+  });
+}
+
 
   obtenerEstadoDietas(): void {
     this.dietaService.obtenerEstadoDietas().subscribe({
@@ -68,46 +84,39 @@ export class DietasClienteComponent implements OnInit {
     });
   }
 
+  aplicarFiltro(): void {
+  if (!this.dietas) return;
+
+  if (this.filtro === 'dia') {
+    this.dietasFiltradas = this.filtroDietas.filtrarDia(this.dietas, this.fechaFiltro);
+  }
+  else if (this.filtro === 'semana') {
+    this.dietasFiltradas = this.filtroDietas.filtrarSemana(this.dietas, this.fechaFiltro);
+  }
+  else {
+    this.dietasFiltradas = this.filtroDietas.filtrarMes(this.dietas, this.fechaFiltro);
+  }
+
+  console.log("📌 Dietas filtradas:", this.dietasFiltradas);
+}
+
+
   /**
-   * Abre el modal básico con detalles
+   * Abre el modal de detalle de dieta
    */
-  abrirDetalle(dieta: Dieta): void {
+  abrirDetalleDieta(dieta: Dieta): void {
+    console.log('👁️ Abriendo detalle de dieta:', dieta.nombre);
     this.dietaSeleccionada = dieta;
-    this.mostrarDetalle = true;
+    this.mostrarDetalleDieta = true;
   }
 
   /**
-   * Cierra el modal básico
+   * Cierra el modal de detalle de dieta
    */
-  cerrarDetalle(): void {
-    this.mostrarDetalle = false;
+  cerrarDetalleDieta(): void {
+    console.log('❌ Cerrando detalle de dieta');
+    this.mostrarDetalleDieta = false;
     this.dietaSeleccionada = null;
-  }
-
-  /**
-   * ✅ NUEVO: Abre el modal profesional con 3 pestañas
-   */
-  abrirDietaProfesional(dieta: Dieta): void {
-    console.log('🍽️ Abriendo dieta profesional:', dieta.nombre);
-    this.dietaSeleccionadaProfesional = dieta;
-    this.mostrarModalProfesional = true;
-  }
-
-  /**
-   * ✅ NUEVO: Cierra el modal profesional
-   */
-  cerrarDietaProfesional(): void {
-    console.log('❌ Cerrando dieta profesional');
-    this.mostrarModalProfesional = false;
-    this.dietaSeleccionadaProfesional = null;
-  }
-
-  /**
-   * ✅ NUEVO: Descarga PDF desde el modal profesional
-   */
-  descargarDesdeModal(dieta: Dieta): void {
-    console.log('📥 Descargando dieta desde modal:', dieta.nombre);
-    this.descargarDietaPDF(dieta);
   }
 
   formatearObjetivo(objetivo: string): string {
@@ -189,8 +198,6 @@ export class DietasClienteComponent implements OnInit {
 
   /**
    * Descarga la dieta en PDF
-   * OPCIÓN 1: Desde el backend (si existe)
-   * OPCIÓN 2: Genera en frontend (fallback)
    */
   descargarDietaPDF(dieta: Dieta): void {
     this.descargandoPDF = true;
@@ -419,20 +426,19 @@ export class DietasClienteComponent implements OnInit {
   }
 
   /**
-   * Abre el modal profesional con la dieta completa
+   * Abre el modal del calendario
    */
-  abrirDetalleDieta(dieta: Dieta): void {
-    console.log('👁️ Abriendo detalle de dieta:', dieta.nombre);
-    this.dietaSeleccionada = dieta;
-    this.mostrarDetalleDieta = true;
+  abrirCalendario(): void {
+    console.log('📅 Abriendo calendario');
+    this.mostrarCalendario = true;
   }
 
   /**
-   * Cierra el modal profesional
+   * Cierra el modal del calendario
    */
-  cerrarDetalleDieta(): void {
-    console.log('❌ Cerrando detalle de dieta');
-    this.mostrarDetalleDieta = false;
-    this.dietaSeleccionada = null;
+  cerrarCalendario(): void {
+    console.log('❌ Cerrando calendario');
+    this.mostrarCalendario = false;
   }
 }
+
