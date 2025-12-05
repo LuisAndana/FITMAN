@@ -1,0 +1,109 @@
+<!-- Overlay -->
+<div class="modal-overlay" *ngIf="isOpen" (click)="closeForm()"></div>
+
+<!-- Modal Formulario -->
+<div class="modal-form" *ngIf="isOpen">
+  <!-- Header -->
+  <div class="form-header">
+    <h2 class="form-title">Califica tu experiencia</h2>
+    <button
+      class="form-close"
+      type="button"
+      (click)="closeForm()"
+      aria-label="Cerrar"
+    >
+      ✕
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="form-body">
+    <!-- Error -->
+    <div *ngIf="error" class="alert alert-error">
+      <span class="alert-icon">⚠️</span>
+      <span class="alert-text">{{ error }}</span>
+    </div>
+
+    <!-- Campo: Calificación (Estrellas) -->
+    <fieldset class="form-group">
+      <legend class="form-label">Calificación</legend>
+      <div class="stars-input">
+        <button
+          *ngFor="let star of getStars()"
+          type="button"
+          class="star-btn"
+          [class.filled]="isStarFilled(star)"
+          (click)="setCalificacion(star)"
+          [attr.aria-label]="'Calificar ' + star + ' estrella' + (star !== 1 ? 's' : '')"
+        >
+          ★
+        </button>
+      </div>
+      <p class="stars-label" *ngIf="calificacion">
+        {{ calificacion }} de 5 estrellas
+      </p>
+    </fieldset>
+
+    <!-- Campo: Título (opcional) -->
+    <fieldset class="form-group">
+      <label for="titulo" class="form-label">Título (opcional)</label>
+      <input
+        id="titulo"
+        type="text"
+        class="form-input"
+        [(ngModel)]="titulo"
+        placeholder="Ej: Excelente servicio y atención"
+        maxlength="150"
+        [disabled]="submitting"
+      />
+      <p class="form-hint">Máximo 150 caracteres</p>
+    </fieldset>
+
+    <!-- Campo: Comentario -->
+    <fieldset class="form-group">
+      <label for="comentario" class="form-label">Tu experiencia</label>
+      <textarea
+        id="comentario"
+        class="form-textarea"
+        [(ngModel)]="comentario"
+        (input)="onCommentChange()"
+        placeholder="Cuéntanos cómo fue tu experiencia con este nutriólogo..."
+        maxlength="1000"
+        rows="6"
+        [disabled]="submitting"
+        required
+      ></textarea>
+      <div class="textarea-info">
+        <p class="form-hint" *ngIf="commentLength === 0">
+          Mínimo 10 caracteres recomendados
+        </p>
+        <p class="textarea-counter">
+          {{ commentLength }} / {{ maxCommentLength }}
+        </p>
+      </div>
+    </fieldset>
+  </div>
+
+  <!-- Footer -->
+  <div class="form-footer">
+    <button
+      class="btn btn-secondary"
+      type="button"
+      (click)="closeForm()"
+      [disabled]="submitting"
+    >
+      Cancelar
+    </button>
+    <button
+      class="btn btn-primary"
+      type="button"
+      (click)="submit()"
+      [disabled]="!isValid() || submitting"
+    >
+      <span *ngIf="!submitting">✓ Enviar reseña</span>
+      <span *ngIf="submitting">
+        <span class="spinner-mini"></span> Enviando...
+      </span>
+    </button>
+  </div>
+</div>

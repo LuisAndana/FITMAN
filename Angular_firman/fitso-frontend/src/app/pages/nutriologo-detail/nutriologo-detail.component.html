@@ -32,7 +32,7 @@
         </div>
       </div>
 
-      <!-- Acciones -->
+      <!-- Acciones principales -->
       <div class="cta-row">
         <!-- 👉 BOTÓN PRINCIPAL: CONTRATAR -->
         <button 
@@ -43,7 +43,15 @@
           💳 Contratar Nutriólogo
         </button>
 
-        <!-- Botones secundarios -->
+        <!-- Botón secundario: Ver Reseñas -->
+        <button
+          class="btn ghost"
+          type="button"
+          (click)="openResenas()">
+          ⭐ Ver Reseñas
+        </button>
+
+        <!-- Botones adicionales -->
         <a *ngIf="data.documento_url"
            class="btn ghost"
            [href]="data.documento_url"
@@ -55,6 +63,15 @@
           💬 Enviar mensaje
         </button>
       </div>
+
+      <!-- Botón para crear reseña (si está autenticado y es cliente) -->
+      <button
+        *ngIf="userAuthenticated && !isNutriologo"
+        class="btn-create-resena"
+        type="button"
+        (click)="openFormResena()">
+        ✍️ Crear reseña
+      </button>
 
       <!-- Aviso si no está autenticado -->
       <p class="auth-hint" *ngIf="!userAuthenticated">
@@ -91,3 +108,18 @@
     </article>
   </div>
 </div>
+
+<!-- Modal: Mostrar Reseñas -->
+<app-resenas-modal
+  [nutriologoId]="data?.id_usuario"
+  [isOpen]="showResenas"
+  (close)="closeResenas()">
+</app-resenas-modal>
+
+<!-- Modal: Crear Reseña -->
+<app-resena-form
+  [nutriologoId]="data?.id_usuario"
+  [isOpen]="showFormResena"
+  (close)="closeFormResena()"
+  (success)="onResenaCreated()">
+</app-resena-form>

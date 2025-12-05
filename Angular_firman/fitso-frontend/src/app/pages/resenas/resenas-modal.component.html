@@ -1,0 +1,123 @@
+<!-- Overlay Modal -->
+<div class="modal-overlay" *ngIf="isOpen" (click)="closeModal()"></div>
+
+<!-- Modal Principal -->
+<div class="modal" *ngIf="isOpen">
+  <!-- Header -->
+  <div class="modal-header">
+    <h2 class="modal-title">Reseñas y Calificaciones</h2>
+    <button class="modal-close" type="button" (click)="closeModal()" aria-label="Cerrar">
+      ✕
+    </button>
+  </div>
+
+  <!-- Contenido -->
+  <div class="modal-body">
+    <!-- Estado de carga -->
+    <div *ngIf="loading" class="state-loading">
+      <div class="spinner"></div>
+      <p>Cargando reseñas...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error && !loading" class="state-error">
+      <div class="error-icon">⚠️</div>
+      <p>{{ error }}</p>
+    </div>
+
+    <!-- Contenido disponible -->
+    <div *ngIf="!loading && !error">
+      <!-- SECCIÓN 1: ESTADÍSTICAS -->
+      <section *ngIf="stats && stats.total_resenas > 0" class="stats-section">
+        <div class="stats-header">
+          <div class="rating-big">
+            <div class="rating-number">{{ stats.calificacion_promedio }}</div>
+            <div class="rating-stars">
+              <span
+                *ngFor="let star of [1, 2, 3, 4, 5]"
+                class="star"
+                [class.filled]="isStarFilled(star, stats.calificacion_promedio)"
+              >
+                ★
+              </span>
+            </div>
+            <div class="rating-count">{{ stats.total_resenas }} reseña<span *ngIf="stats.total_resenas !== 1">s</span></div>
+          </div>
+
+          <!-- Distribución de estrellas -->
+          <div class="distribution">
+            <div class="dist-row" *ngFor="let stars of [5, 4, 3, 2, 1]">
+              <span class="dist-label">{{ stars }} ★</span>
+              <div class="dist-bar">
+                <div
+                  class="dist-fill"
+                  [style.width]="getProgressWidth(
+                    stats.distribucion_estrellas[stars.toString()] || 0,
+                    stats.total_resenas
+                  )"
+                ></div>
+              </div>
+              <span class="dist-count">
+                {{ stats.distribucion_estrellas[stars.toString()] || 0 }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Estado: Sin reseñas -->
+      <div *ngIf="(!stats || stats.total_resenas === 0) && !loading" class="state-empty">
+        <div class="empty-icon">📝</div>
+        <h3>Sin reseñas aún</h3>
+        <p>Sé el primero en calificar a este nutriólogo</p>
+      </div>
+
+      <!-- SECCIÓN 2: LISTADO DE RESEÑAS -->
+      <section *ngIf="resenas.length > 0" class="resenas-section">
+        <h3 class="resenas-title">Reseñas de clientes</h3>
+
+        <article *ngFor="let resena of resenas" class="resena-card">
+          <!-- Encabezado -->
+          <div class="resena-header">
+            <div class="resena-author">
+              <div class="author-avatar">
+                {{ (resena.cliente_nombre || 'C').charAt(0) | uppercase }}
+              </div>
+              <div class="author-info">
+                <p class="author-name">{{ resena.cliente_nombre || 'Cliente anónimo' }}</p>
+                <p class="author-date">{{ formatDate(resena.creado_en) }}</p>
+              </div>
+            </div>
+
+            <!-- Insignia verificado -->
+            <span *ngIf="resena.verificado" class="badge-verified">✓ Verificado</span>
+          </div>
+
+          <!-- Calificación y título -->
+          <div class="resena-rating">
+            <div class="stars-row">
+              <span
+                *ngFor="let star of getStars(resena.calificacion)"
+                class="star"
+                [class.filled]="isStarFilled(star, resena.calificacion)"
+              >
+                ★
+              </span>
+            </div>
+            <h4 class="resena-titulo" *ngIf="resena.titulo">{{ resena.titulo }}</h4>
+          </div>
+
+          <!-- Comentario -->
+          <p class="resena-comentario" *ngIf="resena.comentario">
+            {{ resena.comentario }}
+          </p>
+        </article>
+      </section>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="modal-footer">
+    <button class="btn-close" type="button" (click)="closeModal()">Cerrar</button>
+  </div>
+</div>

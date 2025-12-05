@@ -211,6 +211,33 @@ button{ font-family: inherit }
   cursor: not-allowed;
 }
 
+/* ========== BOTÓN CREAR RESEÑA ========== */
+.btn-create-resena {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 18px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 10px;
+  color: #a7f3d0;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-create-resena:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-create-resena:active {
+  transform: translateY(0);
+}
+
 /* ========== AVISO DE AUTENTICACIÓN ========== */
 .auth-hint {
   color: #ffa64d;
@@ -369,6 +396,11 @@ button{ font-family: inherit }
     width: 100%;
   }
 
+  .btn-create-resena {
+    width: 100%;
+    justify-content: center;
+  }
+
   .auth-hint {
     width: 100%;
   }
@@ -407,6 +439,26 @@ button{ font-family: inherit }
   }
 
   .card p {
+    font-size: 0.85rem;
+  }
+
+  .cta-row {
+    gap: 10px;
+  }
+
+  .hire-btn {
+    padding: 11px 16px;
+    font-size: 0.9rem;
+  }
+
+  .btn.ghost,
+  .btn.outline {
+    padding: 10px 14px;
+    font-size: 0.85rem;
+  }
+
+  .btn-create-resena {
+    padding: 10px 14px;
     font-size: 0.85rem;
   }
 }

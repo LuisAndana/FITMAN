@@ -9,5 +9,6 @@ from . import users
 from . import contratos
 from . import clientes_router as clientes
 from . import catalogo_router
+from . import resenas_router
 
-__all__ = ['auth', 'users', 'contratos', 'clientes', 'catalogo_router']
+__all__ = ['auth', 'users', 'contratos', 'clientes', 'catalogo_router','resenas_router'],

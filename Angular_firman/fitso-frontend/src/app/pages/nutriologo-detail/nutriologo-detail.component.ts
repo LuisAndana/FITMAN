@@ -5,11 +5,13 @@ import { NutriologosService } from '../../services/nutriologos.service';
 import { AuthService } from '../../services/auth.service';
 import { ContratoService } from '../../services/contrato.service';
 import { ContratoStateService } from '../../services/contrato-state.service';
+import { ResenaModalComponent } from '../../pages/resenas/resenas-modal.component';
+import { ResenaFormComponent } from '../../pages/resenas/resena-form.component';
 
 @Component({
   standalone: true,
   selector: 'app-nutriologo-detail',
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ResenaModalComponent, ResenaFormComponent],
   templateUrl: './nutriologo-detail.component.html',
   styleUrls: ['./nutriologo-detail.component.css']
 })
@@ -19,6 +21,10 @@ export class NutriologoDetailComponent implements OnInit {
   userAuthenticated = false;
   isNutriologo = false;
   procesando = false;
+
+  // Modales de reseñas
+  showResenas = false;
+  showFormResena = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -111,6 +117,60 @@ export class NutriologoDetailComponent implements OnInit {
       alert('Error al procesar la contratación. Intenta de nuevo.');
       this.procesando = false;
     }
+  }
+
+  /**
+   * 📝 ABRIR MODAL DE RESEÑAS
+   */
+  openResenas(): void {
+    if (!this.data?.id_usuario) {
+      alert('Error: No se puede cargar las reseñas');
+      return;
+    }
+    this.showResenas = true;
+    console.log('📝 Abriendo modal de reseñas');
+  }
+
+  closeResenas(): void {
+    this.showResenas = false;
+    console.log('❌ Cerrando modal de reseñas');
+  }
+
+  /**
+   * ⭐ ABRIR FORMULARIO PARA CREAR RESEÑA
+   */
+  openFormResena(): void {
+    if (!this.userAuthenticated) {
+      this.router.navigate(['/login'], {
+        queryParams: { returnUrl: `/nutriologos/${this.data.id_usuario}` }
+      });
+      return;
+    }
+
+    if (this.isNutriologo) {
+      alert('❌ Los nutriólogos no pueden crear reseñas');
+      return;
+    }
+
+    this.showFormResena = true;
+    console.log('⭐ Abriendo formulario de reseña');
+  }
+
+  closeFormResena(): void {
+    this.showFormResena = false;
+    console.log('❌ Cerrando formulario de reseña');
+  }
+
+  /**
+   * ✅ RESEÑA CREADA EXITOSAMENTE
+   */
+  onResenaCreated(): void {
+    console.log('✅ Reseña creada! Refrescando...');
+    this.showFormResena = false;
+    // Reabrir modal de reseñas para ver la nueva
+    setTimeout(() => {
+      this.showResenas = true;
+    }, 500);
   }
 
   /**
