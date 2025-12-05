@@ -1,6 +1,4 @@
 <div class="dashboard-container">
-  <!-- (Header global vive en AppComponent con <app-header>) -->
-
   <!-- Menú lateral deslizable -->
   <nav class="sidebar-menu" [class.open]="menuOpen">
     <div class="menu-close" (click)="toggleMenu()">×</div>
@@ -8,14 +6,18 @@
       <li>
         <a [routerLink]="['/dashboard']" routerLinkActive="active" (click)="toggleMenu()">📊 Dashboard</a>
       </li>
-      <li><a href="#progreso" (click)="toggleMenu()">📈 Mi Progreso</a></li>
-      <li><a href="#rutinas" (click)="toggleMenu()">💪 Mis Rutinas</a></li>
-      <li><a href="#dieta" (click)="toggleMenu()">🍎 Plan de Dieta</a></li>
-      <li><a href="#logros" (click)="toggleMenu()">🏆 Logros</a></li>
+      <li>
+        <a [routerLink]="['/nutriologos']" routerLinkActive="active" (click)="toggleMenu()">👨‍⚕️ Nutritionistas</a>
+      </li>
+      <li>
+        <a [routerLink]="['/dietas']" routerLinkActive="active" (click)="toggleMenu()">🍎 Mis Dietas</a>
+      </li>
+      <li>
+        <a [routerLink]="['/contratos']" routerLinkActive="active" (click)="toggleMenu()">📋 Mis Contratos</a>
+      </li>
       <li>
         <a [routerLink]="['/profile/cliente']" routerLinkActive="active" (click)="toggleMenu()">👤 Mi Perfil</a>
       </li>
-      <li><a href="#configuracion" (click)="toggleMenu()">⚙️ Configuración</a></li>
     </ul>
   </nav>
 
@@ -26,98 +28,166 @@
     <!-- Sección de Bienvenida Hero -->
     <section class="welcome-hero">
       <div class="hero-content">
-        <h2>¡Bienvenido de vuelta, {{ usuario?.correo?.split('@')[0] | titlecase }}! 💪</h2>
-        <p class="hero-subtitle">Tu viaje hacia el fitness continúa aquí. Cada sesión cuenta.</p>
+        <h2>¡Bienvenido de vuelta, {{ usuario?.correo?.split('@')[0] | titlecase }}! 🥗</h2>
+        <p class="hero-subtitle">Gestiona tus dietas personalizadas y conecta con profesionales.</p>
 
-        <div class="hero-stats">
+        <!-- Skeleton mientras carga -->
+        <div *ngIf="cargando" class="hero-stats">
+          <div class="stat-box skeleton"></div>
+          <div class="stat-box skeleton"></div>
+          <div class="stat-box skeleton"></div>
+        </div>
+
+        <!-- Datos reales cuando cargan -->
+        <div *ngIf="!cargando" class="hero-stats">
           <div class="stat-box">
-            <span class="stat-icon">🔥</span>
+            <span class="stat-icon">👨‍⚕️</span>
             <div>
-              <p class="stat-value">12</p>
-              <p class="stat-label">Entrenamientos</p>
+              <p class="stat-value">{{ estadisticas.nutritionistasContratados || 0 }}</p>
+              <p class="stat-label">Nutritionistas</p>
             </div>
           </div>
           <div class="stat-box">
-            <span class="stat-icon">📅</span>
+            <span class="stat-icon">🍎</span>
             <div>
-              <p class="stat-value">8</p>
-              <p class="stat-label">Días Seguidos</p>
+              <p class="stat-value">{{ estadisticas.dietasActivas || 0 }}</p>
+              <p class="stat-label">Dietas Activas</p>
             </div>
           </div>
           <div class="stat-box">
-            <span class="stat-icon">⚡</span>
+            <span class="stat-icon">📋</span>
             <div>
-              <p class="stat-value">320</p>
-              <p class="stat-label">Calorías Hoy</p>
+              <p class="stat-value">{{ estadisticas.contratosActivos || 0 }}</p>
+              <p class="stat-label">Contratos</p>
             </div>
           </div>
         </div>
 
-        <button class="btn-primary-large">Comenzar Entrenamiento →</button>
+        <button class="btn-primary-large" (click)="irAMisDietas()">Explorar mis Dietas →</button>
       </div>
     </section>
 
     <!-- Grid de características principales -->
     <section class="features-grid">
-      <div class="feature-card">
-        <div class="card-icon">📈</div>
-        <h3>Monitorea tu Progreso</h3>
-        <p>Visualiza tu evolución en tiempo real con gráficos detallados de tus entrenamientos y cambios físicos.</p>
-        <a href="#" class="card-link">Ver Progreso →</a>
-      </div>
-
-      <div class="feature-card">
-        <div class="card-icon">💪</div>
-        <h3>Rutinas Personalizadas</h3>
-        <p>Accede a planes de entrenamiento diseñados para tus objetivos específicos de fitness.</p>
-        <a href="#" class="card-link">Explorar Rutinas →</a>
-      </div>
-
-      <div class="feature-card">
+      <!-- Mis Dietas Card - ahora clickeable -->
+      <div class="feature-card clickable" (click)="irAMisDietas()">
         <div class="card-icon">🍎</div>
-        <h3>Planes Nutricionales</h3>
-        <p>Obtén recomendaciones personalizadas de dieta adaptadas a tu metabolismo y objetivos.</p>
-        <a href="#" class="card-link">Ver Dietas →</a>
+        <h3>Mis Dietas</h3>
+        <p>Accede a tus planes nutricionales generados por IA y supervisados por nutritionistas.</p>
+        <a class="card-link">Ver Dietas →</a>
+      </div>
+
+      <!-- Contratos Card - abre modal -->
+      <div class="feature-card clickable" (click)="abrirModalContratos()">
+        <div class="card-icon">📋</div>
+        <h3>Contratos Activos</h3>
+        <p>Gestiona tus acuerdos con nutritionistas y monitorea el estado de tus servicios.</p>
+        <a class="card-link">Ver Contratos →</a>
       </div>
 
       <div class="feature-card">
-        <div class="card-icon">🏆</div>
-        <h3>Desbloquea Logros</h3>
-        <p>Celebra hitos importantes y gana insignias por tu dedicación en el fitness.</p>
-        <a href="#" class="card-link">Ver Logros →</a>
+        <div class="card-icon">👨‍⚕️</div>
+        <h3>Encuentra Nutritionistas</h3>
+        <p>Explora y contrata profesionales verificados especializados en nutrición personalizada.</p>
+        <a [routerLink]="['/nutriologos']" class="card-link">Ver Nutritionistas →</a>
+      </div>
+
+      <div class="feature-card">
+        <div class="card-icon">👤</div>
+        <h3>Mi Perfil</h3>
+        <p>Actualiza tu información personal y preferencias de nutrición.</p>
+        <a [routerLink]="['/profile/cliente']" class="card-link">Ir al Perfil →</a>
       </div>
     </section>
 
-    <!-- Sección de Actividad Reciente -->
+    <!-- Sección de Estado -->
     <section class="recent-activity">
-      <h3>Actividad Reciente</h3>
+      <h3>Estado General</h3>
       <div class="activity-list">
-        <div class="activity-item">
+        <div class="activity-item" *ngIf="!cargando">
           <span class="activity-icon">✓</span>
           <div class="activity-content">
-            <p class="activity-title">Completaste tu rutina de pecho</p>
-            <p class="activity-time">Hace 2 horas</p>
+            <p class="activity-title">Tu perfil está completo</p>
+            <p class="activity-time">Listo para contratar nutritionistas</p>
           </div>
         </div>
-        <div class="activity-item">
-          <span class="activity-icon">🎯</span>
+        <div class="activity-item" *ngIf="cargando">
+          <span class="activity-icon">⏳</span>
           <div class="activity-content">
-            <p class="activity-title">Alcanzaste 1000 calorías quemadas esta semana</p>
-            <p class="activity-time">Hace 1 día</p>
-          </div>
-        </div>
-        <div class="activity-item">
-          <span class="activity-icon">💪</span>
-          <div class="activity-content">
-            <p class="activity-title">Nuevo récord personal: 50 kg en sentadillas</p>
-            <p class="activity-time">Hace 3 días</p>
+            <p class="activity-title">Cargando información...</p>
+            <p class="activity-time">Un momento por favor</p>
           </div>
         </div>
       </div>
     </section>
   </main>
 
+  <!-- ✅ NUEVO: MODAL DE CONTRATOS -->
+  <div class="modal-overlay" *ngIf="mostrarModalContratos" (click)="cerrarModalContratos()"></div>
+
+  <div class="modal-contratos" *ngIf="mostrarModalContratos" [@slideIn]>
+    <div class="modal-header">
+      <h2>📋 Mis Contratos Activos</h2>
+      <button class="modal-close" (click)="cerrarModalContratos()">×</button>
+    </div>
+
+    <div class="modal-content">
+      <!-- Cargando -->
+      <div *ngIf="cargandoContratos" class="modal-loading">
+        <p>Cargando contratos...</p>
+      </div>
+
+      <!-- Sin contratos -->
+      <div *ngIf="!cargandoContratos && contratos.length === 0" class="modal-empty">
+        <span class="empty-icon">📋</span>
+        <p>No tienes contratos activos</p>
+        <button class="btn-primary-small" [routerLink]="['/nutriologos']">
+          Explorar Nutritionistas
+        </button>
+      </div>
+
+      <!-- Lista de contratos -->
+      <div *ngIf="!cargandoContratos && contratos.length > 0" class="contratos-list">
+        <div class="contrato-item" *ngFor="let contrato of contratos">
+          <div class="contrato-header">
+            <h3>{{ contrato.otro_usuario_nombre }}</h3>
+            <span class="badge" [style.backgroundColor]="getColorEstado(diasRestantes[contrato.id_contrato] || 0)">
+              {{ getEstadoDiasRestantes(diasRestantes[contrato.id_contrato] || 0) }}
+            </span>
+          </div>
+
+          <div class="contrato-details">
+            <div class="detail-row">
+              <span class="label">Monto:</span>
+              <span class="value">${{ contrato.monto }} {{ contrato.moneda?.toUpperCase() }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Estado:</span>
+              <span class="value">{{ contrato.estado }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Duración:</span>
+              <span class="value">{{ contrato.duracion_meses }} mes(es)</span>
+            </div>
+            <div class="detail-row" *ngIf="contrato.fecha_fin">
+              <span class="label">Vencimiento:</span>
+              <span class="value">{{ contrato.fecha_fin | date: 'short' }}</span>
+            </div>
+          </div>
+
+          <div class="contrato-progress">
+            <div class="progress-bar" [style.width.%]="(diasRestantes[contrato.id_contrato] || 0) / (contrato.duracion_meses * 30) * 100"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarModalContratos()">Cerrar</button>
+    </div>
+  </div>
+
   <footer class="dashboard-footer">
-    <p>&copy; 2024 FitSo. Transforme su cuerpo y su mente. Todos los derechos reservados.</p>
+    <p>&copy; 2024 FITMAN. Gestión de Nutrición Personalizada. Todos los derechos reservados.</p>
   </footer>
 </div>

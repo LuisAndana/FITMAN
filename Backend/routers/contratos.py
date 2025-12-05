@@ -390,3 +390,83 @@ async def cancelar_contrato(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al cancelar el contrato"
         )
+
+
+@router.get("/mis-contratos/{usuario_id}")
+async def obtener_mis_contratos(
+        usuario_id: int,
+        db: Session = Depends(get_db)
+):
+    """
+    ✅ OBTENER MIS CONTRATOS (cliente o nutriólogo)
+
+    Retorna todos los contratos del usuario, ya sea como cliente o nutriólogo.
+    Incluye información del otro usuario y fechas importantes.
+
+    Ejemplo de respuesta:
+    {
+      "contratos": [
+        {
+          "id_contrato": 1,
+          "otro_usuario_nombre": "Dr. Juan Pérez",
+          "monto": 50.00,
+          "moneda": "usd",
+          "estado": "ACTIVO",
+          "duracion_meses": 1,
+          "fecha_creacion": "2024-01-15",
+          "fecha_inicio": "2024-01-16",
+          "fecha_fin": "2024-02-16"
+        }
+      ]
+    }
+    """
+
+    logger.info(f"📋 Obteniendo contratos del usuario {usuario_id}")
+
+    try:
+        # Obtener contratos donde el usuario es cliente O nutriólogo
+        contratos = db.query(Contrato).filter(
+            (Contrato.id_cliente == usuario_id) | (Contrato.id_nutriologo == usuario_id)
+        ).all()
+
+        logger.info(f"✅ Encontrados {len(contratos)} contratos")
+
+        resultado = []
+
+        for contrato in contratos:
+            # Determinar qué tipo de usuario somos y obtener nombre del otro
+            if contrato.id_cliente == usuario_id:
+                # Somos cliente, obtener nombre del nutriólogo
+                otro_usuario = db.query(Usuario).filter(
+                    Usuario.id_usuario == contrato.id_nutriologo
+                ).first()
+                otro_nombre = otro_usuario.nombre if otro_usuario else "Desconocido"
+            else:
+                # Somos nutriólogo, obtener nombre del cliente
+                otro_usuario = db.query(Usuario).filter(
+                    Usuario.id_usuario == contrato.id_cliente
+                ).first()
+                otro_nombre = otro_usuario.nombre if otro_usuario else "Desconocido"
+
+            resultado.append({
+                "id_contrato": contrato.id_contrato,
+                "otro_usuario_nombre": otro_nombre,
+                "monto": float(contrato.monto),
+                "moneda": contrato.moneda or "usd",
+                "estado": contrato.estado.value,
+                "duracion_meses": contrato.duracion_meses,
+                "fecha_creacion": contrato.fecha_creacion.isoformat() if contrato.fecha_creacion else None,
+                "fecha_inicio": contrato.fecha_inicio.isoformat() if contrato.fecha_inicio else None,
+                "fecha_fin": contrato.fecha_fin.isoformat() if contrato.fecha_fin else None
+            })
+
+        return {
+            "contratos": resultado
+        }
+
+    except Exception as e:
+        logger.error(f"❌ Error al obtener contratos: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener contratos: {str(e)}"
+        )

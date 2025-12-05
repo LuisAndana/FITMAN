@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -38,13 +38,17 @@ export class NutriologosListComponent implements OnInit, OnDestroy {
   loading = false;
   items: Nutriologo[] = [];
 
-  private destroy$ = new Subject<void>(); // ✅ versión-agnóstica
+  private destroy$ = new Subject<void>();
+  private isFetching = false; // ✅ Flag para evitar llamadas recursivas
 
   get totalPages(): number {
     return Math.max(1, Math.ceil((this.total || 0) / this.size));
   }
 
-  constructor(private api: NutriologosService) {}
+  constructor(
+    private api: NutriologosService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.fetch();
@@ -57,8 +61,11 @@ export class NutriologosListComponent implements OnInit, OnDestroy {
 
   /** Llama a la API con los filtros actuales */
   fetch(): void {
-    if (this.loading) return; // evita llamadas simultáneas
+    if (this.loading || this.isFetching) return;
+    
     this.loading = true;
+    this.isFetching = true;
+    this.cdr.markForCheck();
 
     this.api.list({
       q: this.q?.trim() || undefined,
@@ -68,24 +75,21 @@ export class NutriologosListComponent implements OnInit, OnDestroy {
       solo_validados: true
     })
     .pipe(
-      takeUntil(this.destroy$), // ✅ sin takeUntilDestroyed
+      takeUntil(this.destroy$),
       tap((res: ListResponse<Nutriologo>) => {
         this.items = res?.items ?? [];
         this.total = typeof res?.total === 'number' ? res.total : this.items.length;
-
-        // Si la página queda fuera de rango (p.ej. cambiaron filtros), ajusta:
-        const last = this.totalPages;
-        if (this.page > last && this.total > 0) {
-          this.page = last;
-          this.fetch();
-        }
       }),
       catchError(() => {
         this.items = [];
         this.total = 0;
         return of(null);
       }),
-      finalize(() => { this.loading = false; })
+      finalize(() => {
+        this.loading = false;
+        this.isFetching = false;
+        this.cdr.markForCheck();
+      })
     )
     .subscribe();
   }

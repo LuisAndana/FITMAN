@@ -7,6 +7,20 @@
     </div>
   </div>
 
+  <!-- 🆕 BANNER: Fecha seleccionada en calendario - MEJORADO -->
+  <div *ngIf="fechaSeleccionadaCalendario" class="fecha-seleccionada-banner">
+    <div class="fecha-banner-content">
+      <span class="fecha-banner-icon">📅</span>
+      <div class="fecha-banner-text">
+        <span class="fecha-label">Viendo planes disponibles para:</span>
+        <span class="fecha-valor">{{ formatearFecha(fechaSeleccionadaCalendario.toISOString()) }}</span>
+      </div>
+      <button class="btn-volver-hoy" (click)="mostrarDietasDeHoy()">
+        <span>↩️</span> Volver a Hoy
+      </button>
+    </div>
+  </div>
+
   <!-- Botón Calendario Flotante -->
   <div class="calendario-floating-btn" (click)="abrirCalendario()">
     <div class="calendario-icon">📅</div>
@@ -56,31 +70,7 @@
     </div>
   </div>
 
-  <!-- Filtros de Dietas -->
-<div class="filtros-container">
-  <button 
-    class="filtro-btn"
-    [class.active]="filtro === 'dia'"
-    (click)="filtro = 'dia'; aplicarFiltro()">
-    Hoy
-  </button>
-
-  <button 
-    class="filtro-btn"
-    [class.active]="filtro === 'semana'"
-    (click)="filtro = 'semana'; aplicarFiltro()">
-    Semana
-  </button>
-
-  <button 
-    class="filtro-btn"
-    [class.active]="filtro === 'mes'"
-    (click)="filtro = 'mes'; aplicarFiltro()">
-    Mes
-  </button>
-</div>
-
-
+  
   <!-- Grid de dietas -->
   <div *ngIf="!cargando && dietasFiltradas.length > 0" class="dietas-grid">
     <div 
@@ -146,7 +136,8 @@
   <div *ngIf="!cargando && dietasFiltradas.length === 0" class="empty-state">
     <div class="empty-icon">🍽️</div>
     <h2>Sin planes nutricionales</h2>
-    <p>Aún no tienes planes asignados. Contacta a tu nutriólogo para crear uno.</p>
+    <p *ngIf="!fechaSeleccionadaCalendario">Aún no tienes planes asignados. Contacta a tu nutriólogo para crear uno.</p>
+    <p *ngIf="fechaSeleccionadaCalendario">No hay planes disponibles para la fecha seleccionada.</p>
   </div>
 
   <!-- Modal Detalle -->
@@ -257,10 +248,11 @@
     (descargarPDF)="descargarDietaPDF($event)">
   </app-dieta-detalle>
 
-  <!-- MODAL DEL CALENDARIO -->
+  <!-- 🆕 MODAL DEL CALENDARIO CON EVENTO DE SELECCIÓN -->
   <app-modal-calendario 
     [isOpen]="mostrarCalendario"
     [dietas]="dietas"
-    (cerrarModal)="cerrarCalendario()">
+    (cerrarModal)="cerrarCalendario()"
+    (diaSeleccionado)="onFechaSeleccionadaDelCalendario($event)">
   </app-modal-calendario>
 </div>

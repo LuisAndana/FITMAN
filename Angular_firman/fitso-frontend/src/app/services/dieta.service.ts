@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export interface Dieta {
   id_dieta: number;
@@ -66,6 +67,121 @@ export class DietaService {
       `${this.baseUrl}/api/clientes/mis-dietas-asignadas`,
       { headers }
     );
+  }
+
+  /**
+   * 🆕 OBTENER SOLO DIETAS DISPONIBLES HOY
+   * Filtra las dietas que están vigentes en la fecha actual
+   */
+  obtenerDietasDisponiblesHoy(): Observable<Dieta[]> {
+    return this.obtenerDietasAsignadas().pipe(
+      map((dietas: Dieta[]) => {
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+
+        const dietasDisponibles = dietas.filter(dieta => 
+          this.esDietaDisponibleEnFecha(dieta, hoy)
+        );
+
+        console.log(`📅 Dietas disponibles hoy: ${dietasDisponibles.length} de ${dietas.length}`);
+        return dietasDisponibles;
+      })
+    );
+  }
+
+  /**
+   * 🆕 OBTENER DIETAS DISPONIBLES PARA UNA FECHA ESPECÍFICA
+   */
+  obtenerDietasDisponiblesPorFecha(fecha: Date): Observable<Dieta[]> {
+    return this.obtenerDietasAsignadas().pipe(
+      map((dietas: Dieta[]) => {
+        return dietas.filter(dieta => 
+          this.esDietaDisponibleEnFecha(dieta, fecha)
+        );
+      })
+    );
+  }
+
+  /**
+   * 🆕 VALIDAR SI UNA DIETA ESTÁ DISPONIBLE EN UNA FECHA
+   * Una dieta está disponible si:
+   * - fecha >= fecha_creacion (ya comenzó)
+   * - fecha <= fecha_vencimiento (aún no vence)
+   */
+  private esDietaDisponibleEnFecha(dieta: Dieta, fecha: Date): boolean {
+    const fechaValidar = new Date(fecha);
+    fechaValidar.setHours(0, 0, 0, 0);
+
+    // Fecha de creación de la dieta
+    const fechaCreacion = new Date(dieta.fecha_creacion);
+    fechaCreacion.setHours(0, 0, 0, 0);
+
+    // Calcular fecha de vencimiento
+    let fechaVencimiento = new Date(dieta.fecha_creacion);
+    if (dieta.dias_duracion) {
+      fechaVencimiento.setDate(
+        fechaVencimiento.getDate() + dieta.dias_duracion
+      );
+    } else {
+      // Si no tiene duración, asumir 30 días por defecto
+      fechaVencimiento.setDate(fechaVencimiento.getDate() + 30);
+    }
+    fechaVencimiento.setHours(23, 59, 59, 999);
+
+    // ✅ Retornar true solo si está en rango válido
+    const disponible = fechaValidar >= fechaCreacion && fechaValidar <= fechaVencimiento;
+
+    return disponible;
+  }
+
+  /**
+   * 🆕 OBTENER INFORMACIÓN DETALLADA SOBRE DISPONIBILIDAD
+   * Útil para debugging y análisis
+   */
+  obtenerInfoDisponibilidad(dieta: Dieta): {
+    estaDisponibleHoy: boolean;
+    fechaCreacion: Date;
+    fechaVencimiento: Date;
+    diasRestantes: number;
+    estado: string;
+  } {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    const fechaCreacion = new Date(dieta.fecha_creacion);
+    fechaCreacion.setHours(0, 0, 0, 0);
+
+    let fechaVencimiento = new Date(dieta.fecha_creacion);
+    if (dieta.dias_duracion) {
+      fechaVencimiento.setDate(
+        fechaVencimiento.getDate() + dieta.dias_duracion
+      );
+    } else {
+      fechaVencimiento.setDate(fechaVencimiento.getDate() + 30);
+    }
+    fechaVencimiento.setHours(23, 59, 59, 999);
+
+    const estaDisponible = hoy >= fechaCreacion && hoy <= fechaVencimiento;
+
+    const diferencia = fechaVencimiento.getTime() - hoy.getTime();
+    const diasRestantes = Math.ceil(diferencia / (1000 * 60 * 60 * 24));
+
+    let estado = '';
+    if (!estaDisponible && hoy < fechaCreacion) {
+      estado = 'PENDIENTE';
+    } else if (estaDisponible) {
+      estado = 'DISPONIBLE';
+    } else {
+      estado = 'VENCIDA';
+    }
+
+    return {
+      estaDisponibleHoy: estaDisponible,
+      fechaCreacion,
+      fechaVencimiento,
+      diasRestantes,
+      estado
+    };
   }
 
   /**

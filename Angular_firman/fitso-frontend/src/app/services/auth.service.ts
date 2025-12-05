@@ -387,7 +387,7 @@ export class AuthService {
   getUserProgress(id: number | string): Observable<any> {
     const token = this.getToken();
     
-    const url = `${this.baseUrl}/api/clientes/mi-progreso/${id}`;
+     const url = `${this.baseUrl}/api/users/${id}/progress`;
     
     console.log('📡 GET', url);
 
@@ -558,4 +558,17 @@ export class AuthService {
   getUserName(): string | null {
     return localStorage.getItem('nombreUsuario');
   }
+
+  getMisContratos(usuarioId: string): Observable<any> {
+  const token = localStorage.getItem('token');
+  const headers = new HttpHeaders({
+    'Authorization': `Bearer ${token}`
+  });
+
+  console.log('📋 Obteniendo contratos del usuario:', usuarioId);
+  return this.http.get(
+    `${this.baseUrl}/api/contratos/mis-contratos/${usuarioId}`,
+    { headers }
+  );
+}
 }

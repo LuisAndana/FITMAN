@@ -72,6 +72,178 @@ html, body {
 }
 
 /* ========================================
+   BANNER DE FECHA SELECCIONADA - MEJORADO
+   ======================================== */
+
+.fecha-seleccionada-banner {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #ff7a00 0%, #ffb84d 100%);
+  box-shadow: 0 4px 12px rgba(255, 122, 0, 0.25);
+}
+
+.fecha-banner-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 40px;
+}
+
+.fecha-banner-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+  animation: bounce-banner 2s infinite;
+}
+
+@keyframes bounce-banner {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.fecha-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.fecha-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.fecha-valor {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: white;
+  text-transform: capitalize;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-volver-hoy {
+  padding: 12px 28px;
+  background: white;
+  color: #ff7a00;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-volver-hoy:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  background: #f5f5f5;
+}
+
+.btn-volver-hoy:active {
+  transform: translateY(-1px);
+}
+
+/* Responsive para banner de fecha */
+@media (max-width: 1024px) {
+  .fecha-banner-content {
+    padding: 18px 30px;
+  }
+
+  .fecha-valor {
+    font-size: 1.1rem;
+  }
+
+  .btn-volver-hoy {
+    padding: 10px 24px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .fecha-banner-content {
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 16px 20px;
+    justify-content: flex-start;
+  }
+
+  .fecha-banner-text {
+    order: 2;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .fecha-banner-icon {
+    order: 1;
+    font-size: 1.8rem;
+  }
+
+  .btn-volver-hoy {
+    order: 3;
+    width: 100%;
+    padding: 12px 20px;
+    justify-content: center;
+  }
+
+  .fecha-label {
+    font-size: 0.75rem;
+  }
+
+  .fecha-valor {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .fecha-banner-content {
+    flex-direction: column;
+    text-align: center;
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .fecha-banner-text {
+    order: 1;
+    width: 100%;
+  }
+
+  .fecha-banner-icon {
+    order: 0;
+    font-size: 1.8rem;
+  }
+
+  .btn-volver-hoy {
+    order: 2;
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 0.8rem;
+    justify-content: center;
+  }
+
+  .fecha-label {
+    font-size: 0.7rem;
+  }
+
+  .fecha-valor {
+    font-size: 0.95rem;
+  }
+}
+
+/* ========================================
    BOTÓN CALENDARIO FLOTANTE
    ======================================== */
 
@@ -950,6 +1122,39 @@ html, body {
   .diet-info {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .fecha-banner-content {
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 16px 20px;
+    justify-content: flex-start;
+  }
+
+  .fecha-banner-text {
+    order: 2;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .fecha-banner-icon {
+    order: 1;
+    font-size: 1.8rem;
+  }
+
+  .btn-volver-hoy {
+    order: 3;
+    width: 100%;
+    padding: 12px 20px;
+    justify-content: center;
+  }
+
+  .fecha-label {
+    font-size: 0.75rem;
+  }
+
+  .fecha-valor {
+    font-size: 1rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -982,6 +1187,39 @@ html, body {
 
   .diet-info {
     grid-template-columns: 1fr;
+  }
+
+  .fecha-banner-content {
+    flex-direction: column;
+    text-align: center;
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .fecha-banner-text {
+    order: 1;
+    width: 100%;
+  }
+
+  .fecha-banner-icon {
+    order: 0;
+    font-size: 1.8rem;
+  }
+
+  .btn-volver-hoy {
+    order: 2;
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 0.8rem;
+    justify-content: center;
+  }
+
+  .fecha-label {
+    font-size: 0.7rem;
+  }
+
+  .fecha-valor {
+    font-size: 0.95rem;
   }
 }
 

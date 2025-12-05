@@ -35,7 +35,7 @@ export class ProfileClienteComponent implements OnInit {
     altura: null,
     objetivo: null,
     enfermedades: [],
-    peso_inicial: 95,
+    peso_inicial: null,
     descripcion_medica: ''
   };
 
@@ -89,7 +89,7 @@ export class ProfileClienteComponent implements OnInit {
             altura     : u.altura ?? null,
             objetivo   : u.objetivo ?? null,
             enfermedades: Array.isArray(u.enfermedades) ? u.enfermedades : [],
-            peso_inicial: u.peso_inicial ?? 95,
+            peso_inicial: u.peso_inicial ?? u.peso ?? null,
             descripcion_medica: u.descripcion_medica ?? ''
           };
           this.recomputarCambioPeso();
@@ -178,7 +178,7 @@ export class ProfileClienteComponent implements OnInit {
       altura: this.usuario.altura,
       objetivo: this.usuario.objetivo,
       enfermedades: this.usuario.enfermedades ?? [],
-      peso_inicial: this.usuario.peso_inicial ?? 95,
+      peso_inicial: this.usuario.peso_inicial,
       descripcion_medica: this.usuario.descripcion_medica ?? ''   // <- NUEVO
     };
 

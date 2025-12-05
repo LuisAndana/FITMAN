@@ -22,9 +22,11 @@ export class DietasClienteComponent implements OnInit {
 
   filtro: 'dia' | 'semana' | 'mes' = 'mes';
   fechaFiltro = new Date();
+  fechaSeleccionadaCalendario: Date | null = null; // 🆕 NUEVA
   dietasFiltradas: Dieta[] = [];
 
   dietas: Dieta[] = [];
+  dietasDisponibles: Dieta[] = [];
   dietaSeleccionada: Dieta | null = null;
   cargando = true;
   error = '';
@@ -46,29 +48,80 @@ export class DietasClienteComponent implements OnInit {
     this.obtenerEstadoDietas();
   }
 
-cargarDietas(): void {
-  this.cargando = true;
-  this.error = '';
+  /**
+   * 🔥 MÉTODO PRINCIPAL: Carga dietas y filtra por disponibilidad
+   */
+  cargarDietas(): void {
+    this.cargando = true;
+    this.error = '';
 
-  this.dietaService.obtenerDietasAsignadas().subscribe({
-    next: (dietas: Dieta[]) => {
-      console.log('✅ Dietas cargadas:', dietas);
-      
-      this.dietas = Array.isArray(dietas) ? dietas : [];
-      
-      // 🔥 APLICAR FILTRO
-      this.aplicarFiltro();
+    this.dietaService.obtenerDietasAsignadas().subscribe({
+      next: (dietas: Dieta[]) => {
+        console.log('✅ Todas las dietas cargadas:', dietas);
+        
+        this.dietas = Array.isArray(dietas) ? dietas : [];
+        
+        // 🆕 FILTRAR por disponibilidad en la fecha actual O seleccionada
+        this.filtrarDietasDisponibles();
 
-      this.cargando = false;
-    },
-    error: (err: any) => {
-      console.error('❌ Error al cargar dietas:', err);
-      this.error = 'No pudimos cargar tus dietas. Intenta de nuevo.';
-      this.cargando = false;
+        this.cargando = false;
+      },
+      error: (err: any) => {
+        console.error('❌ Error al cargar dietas:', err);
+        this.error = 'No pudimos cargar tus dietas. Intenta de nuevo.';
+        this.cargando = false;
+      }
+    });
+  }
+
+  /**
+   * 🆕 MÉTODO: Filtra dietas disponibles según fecha seleccionada o hoy
+   * Se usa la fecha del calendario si está seleccionada
+   */
+  private filtrarDietasDisponibles(): void {
+    // 🆕 USAR: Si hay fecha seleccionada en calendario, usar esa. Si no, usar hoy
+    const fechaValidar = this.fechaSeleccionadaCalendario || new Date();
+    const hoy = new Date(fechaValidar);
+    hoy.setHours(0, 0, 0, 0);
+
+    this.dietasDisponibles = this.dietas.filter(dieta => {
+      return this.esDietaDisponibleEnFecha(dieta, hoy);
+    });
+
+    console.log(`📅 Dietas disponibles en ${hoy.toLocaleDateString('es-ES')}: ${this.dietasDisponibles.length} de ${this.dietas.length}`);
+    
+    // Aplicar filtro de rango (día/semana/mes) SOLO a dietas disponibles
+    this.aplicarFiltro();
+  }
+
+  /**
+   * 🆕 NUEVO MÉTODO: Valida si una dieta está disponible en una fecha específica
+   */
+  private esDietaDisponibleEnFecha(dieta: Dieta, fecha: Date): boolean {
+    const fechaValidar = new Date(fecha);
+    fechaValidar.setHours(0, 0, 0, 0);
+
+    // Fecha de creación de la dieta
+    const fechaCreacion = new Date(dieta.fecha_creacion);
+    fechaCreacion.setHours(0, 0, 0, 0);
+
+    // Calcular fecha de vencimiento
+    let fechaVencimiento = new Date(dieta.fecha_creacion);
+    if (dieta.dias_duracion) {
+      fechaVencimiento.setDate(
+        fechaVencimiento.getDate() + dieta.dias_duracion
+      );
+    } else {
+      // Si no tiene duración, asumir 30 días
+      fechaVencimiento.setDate(fechaVencimiento.getDate() + 30);
     }
-  });
-}
+    fechaVencimiento.setHours(23, 59, 59, 999);
 
+    // ✅ Retornar true solo si está en rango válido
+    const disponible = fechaValidar >= fechaCreacion && fechaValidar <= fechaVencimiento;
+    
+    return disponible;
+  }
 
   obtenerEstadoDietas(): void {
     this.dietaService.obtenerEstadoDietas().subscribe({
@@ -84,22 +137,47 @@ cargarDietas(): void {
     });
   }
 
+  /**
+   * 🔄 MODIFICADO: Aplica filtro SOLO a dietas disponibles
+   */
   aplicarFiltro(): void {
-  if (!this.dietas) return;
+    if (!this.dietasDisponibles) return;
 
-  if (this.filtro === 'dia') {
-    this.dietasFiltradas = this.filtroDietas.filtrarDia(this.dietas, this.fechaFiltro);
-  }
-  else if (this.filtro === 'semana') {
-    this.dietasFiltradas = this.filtroDietas.filtrarSemana(this.dietas, this.fechaFiltro);
-  }
-  else {
-    this.dietasFiltradas = this.filtroDietas.filtrarMes(this.dietas, this.fechaFiltro);
+    if (this.filtro === 'dia') {
+      this.dietasFiltradas = this.filtroDietas.filtrarDia(this.dietasDisponibles, this.fechaFiltro);
+    }
+    else if (this.filtro === 'semana') {
+      this.dietasFiltradas = this.filtroDietas.filtrarSemana(this.dietasDisponibles, this.fechaFiltro);
+    }
+    else {
+      this.dietasFiltradas = this.filtroDietas.filtrarMes(this.dietasDisponibles, this.fechaFiltro);
+    }
+
+    console.log("📌 Dietas filtradas:", this.dietasFiltradas);
   }
 
-  console.log("📌 Dietas filtradas:", this.dietasFiltradas);
-}
+  /**
+   * 🆕 NUEVO MÉTODO: Cuando el usuario selecciona una fecha en el calendario
+   * Sincroniza la pantalla principal con la fecha seleccionada
+   */
+  onFechaSeleccionadaDelCalendario(fecha: Date): void {
+    console.log(`🗓️ Fecha seleccionada del calendario: ${fecha.toLocaleDateString('es-ES')}`);
+    
+    // Guardar la fecha seleccionada
+    this.fechaSeleccionadaCalendario = new Date(fecha);
+    
+    // Re-filtrar dietas según esta nueva fecha
+    this.filtrarDietasDisponibles();
+  }
 
+  /**
+   * 🆕 NUEVO MÉTODO: Volver a mostrar dietas de "Hoy"
+   */
+  mostrarDietasDeHoy(): void {
+    console.log('📅 Volviendo a dietas de HOY');
+    this.fechaSeleccionadaCalendario = null;
+    this.filtrarDietasDisponibles();
+  }
 
   /**
    * Abre el modal de detalle de dieta
@@ -203,7 +281,6 @@ cargarDietas(): void {
     this.descargandoPDF = true;
     console.log('📥 Intentando descargar PDF...', dieta.nombre);
 
-    // Primero intenta desde el backend
     this.dietaService.descargarDietaPDF(dieta.id_dieta).subscribe({
       next: (pdf: Blob) => {
         console.log('✅ PDF descargado desde el backend');
@@ -212,7 +289,6 @@ cargarDietas(): void {
       },
       error: (err: any) => {
         console.warn('⚠️ Backend no disponible, generando PDF en frontend...');
-        // Si no existe endpoint en backend, genera en frontend
         this.generarPDFFrontend(dieta);
       }
     });
@@ -237,15 +313,12 @@ cargarDietas(): void {
   private generarPDFFrontend(dieta: Dieta): void {
     console.log('🔧 Generando PDF en frontend...');
 
-    // Cargar pdfMake correctamente
     import('pdfmake/build/pdfmake')
       .then((pdfMakeModule: any) => {
-        // Cargar fuentes
         import('pdfmake/build/vfs_fonts')
           .then((vfsFontsModule: any) => {
             const pdfMake = pdfMakeModule.default;
             
-            // Obtener VFS correctamente
             const vfs = vfsFontsModule.pdfMake?.vfs || vfsFontsModule.default?.vfs;
             
             if (vfs) {
@@ -255,7 +328,6 @@ cargarDietas(): void {
               console.warn('⚠️ No se encontraron VFS fonts, usando fuentes por defecto');
             }
 
-            // Crear documento PDF
             const docDefinition: any = {
               content: [
                 {
@@ -368,7 +440,6 @@ cargarDietas(): void {
           })
           .catch((error: any) => {
             console.error('❌ Error al cargar VFS fonts:', error);
-            // Continuar sin VFS (puede funcionar igual)
             this.generarPDFSinVFS(dieta);
           });
       })
@@ -380,7 +451,7 @@ cargarDietas(): void {
   }
 
   /**
-   * Genera PDF sin VFS (fallback si falla carga de fuentes)
+   * Genera PDF sin VFS (fallback)
    */
   private generarPDFSinVFS(dieta: Dieta): void {
     console.log('📝 Generando PDF sin VFS fonts (fallback)...');
@@ -441,4 +512,3 @@ cargarDietas(): void {
     this.mostrarCalendario = false;
   }
 }
-

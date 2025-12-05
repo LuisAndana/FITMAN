@@ -69,7 +69,7 @@ interface SemanaDias {
 
           <!-- Panel dietas del día - FILTRADAS -->
           <div class="panel-dietas-modal">
-            <h4 class="titulo-dietas-modal">{{ formatearFecha(diaSeleccionado) }}</h4>
+            <h4 class="titulo-dietas-modal">{{ formatearFecha(diaSeleccionadoInterno) }}</h4>
 
             <div class="dietas-modal-list" *ngIf="dietasDelDia.length > 0">
               <div *ngFor="let dieta of dietasDelDia" class="dieta-modal-item">
@@ -560,6 +560,7 @@ export class ModalCalendarioComponent implements OnInit {
   @Input() isOpen = false;
   @Input() dietas: Dieta[] = [];
   @Output() cerrarModal = new EventEmitter<void>();
+  @Output() diaSeleccionado = new EventEmitter<Date>(); // 🆕 NUEVO
 
   mesActual = new Date().getMonth();
   anioActual = new Date().getFullYear();
@@ -572,7 +573,7 @@ export class ModalCalendarioComponent implements OnInit {
 
   diasCalendario: DiaCalendario[] = [];
   semanasDelMes: SemanaDias[] = [];
-  diaSeleccionado: Date = new Date();
+  diaSeleccionadoInterno: Date = new Date(); // 🆕 Renombrado
   dietasDelDia: Dieta[] = [];
 
   ngOnInit(): void {
@@ -621,33 +622,27 @@ export class ModalCalendarioComponent implements OnInit {
   }
 
   obtenerDietasDelDia(fecha: Date): Dieta[] {
-  return this.dietas.filter(dieta => {
-    // Fecha en que se creó la dieta
-    const fechaCreacion = new Date(dieta.fecha_creacion);
-    fechaCreacion.setHours(0, 0, 0, 0);
+    return this.dietas.filter(dieta => {
+      const fechaCreacion = new Date(dieta.fecha_creacion);
+      fechaCreacion.setHours(0, 0, 0, 0);
 
-    // Fecha en que vence la dieta
-    let fechaVencimiento = new Date(dieta.fecha_vencimiento || dieta.fecha_creacion);
-    
-    // Si la dieta tiene duración, calcular vencimiento
-    if (dieta.dias_duracion) {
-      fechaVencimiento = new Date(dieta.fecha_creacion);
-      fechaVencimiento.setDate(
-        fechaVencimiento.getDate() + dieta.dias_duracion
-      );
-    }
-    
-    fechaVencimiento.setHours(23, 59, 59, 999);
+      let fechaVencimiento = new Date(dieta.fecha_creacion);
+      
+      if (dieta.dias_duracion) {
+        fechaVencimiento.setDate(
+          fechaVencimiento.getDate() + dieta.dias_duracion
+        );
+      }
+      
+      fechaVencimiento.setHours(23, 59, 59, 999);
 
-    // Normalizar fecha seleccionada
-    const fechaNormalizada = new Date(fecha);
-    fechaNormalizada.setHours(0, 0, 0, 0);
+      const fechaNormalizada = new Date(fecha);
+      fechaNormalizada.setHours(0, 0, 0, 0);
 
-    // ✅ SOLO retorna dietas ACTIVAS en esta fecha
-    return fechaNormalizada >= fechaCreacion && 
-           fechaNormalizada <= fechaVencimiento;
-  });
-}
+      return fechaNormalizada >= fechaCreacion && 
+             fechaNormalizada <= fechaVencimiento;
+    });
+  }
 
   mesAnterior(): void {
     this.mesActual--;
@@ -671,24 +666,27 @@ export class ModalCalendarioComponent implements OnInit {
     const ahora = new Date();
     this.mesActual = ahora.getMonth();
     this.anioActual = ahora.getFullYear();
-    this.diaSeleccionado = new Date(ahora);
+    this.diaSeleccionadoInterno = new Date(ahora); // 🆕 Actualizado
     this.generarCalendario();
     this.actualizarDietasDelDia();
   }
 
   seleccionarDia(dia: DiaCalendario): void {
-  if (!dia.esDelMesActual) return;
+    if (!dia.esDelMesActual) return;
 
-  this.diaSeleccionado = new Date(dia.fecha);
-  this.dietasDelDia = this.obtenerDietasDelDia(dia.fecha);
+    this.diaSeleccionadoInterno = new Date(dia.fecha); // 🆕 Actualizado
+    this.dietasDelDia = this.obtenerDietasDelDia(dia.fecha);
 
-  console.log(`📅 Día: ${this.formatearFecha(dia.fecha)}`);
-  console.log(`🍽️ Dietas activas: ${this.dietasDelDia.length}`);
-}
-
+    console.log(`📅 Día: ${this.formatearFecha(dia.fecha)}`);
+    console.log(`🍽️ Dietas activas: ${this.dietasDelDia.length}`);
+    
+    // 🆕 NUEVO: Emitir evento
+    this.diaSeleccionado.emit(new Date(dia.fecha));
+    console.log(`🚀 Emitiendo día seleccionado a componente padre`);
+  }
 
   actualizarDietasDelDia(): void {
-    this.dietasDelDia = this.obtenerDietasDelDia(this.diaSeleccionado);
+    this.dietasDelDia = this.obtenerDietasDelDia(this.diaSeleccionadoInterno); // 🆕 Actualizado
   }
 
   esDiaHoy(dia: DiaCalendario): boolean {
@@ -702,9 +700,9 @@ export class ModalCalendarioComponent implements OnInit {
 
   esDiaSeleccionado(dia: DiaCalendario): boolean {
     return (
-      dia.fecha.getDate() === this.diaSeleccionado.getDate() &&
-      dia.fecha.getMonth() === this.diaSeleccionado.getMonth() &&
-      dia.fecha.getFullYear() === this.diaSeleccionado.getFullYear()
+      dia.fecha.getDate() === this.diaSeleccionadoInterno.getDate() && // 🆕 Actualizado
+      dia.fecha.getMonth() === this.diaSeleccionadoInterno.getMonth() &&
+      dia.fecha.getFullYear() === this.diaSeleccionadoInterno.getFullYear()
     );
   }
 
