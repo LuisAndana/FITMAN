@@ -1,109 +1,136 @@
-<!-- Overlay -->
-<div class="modal-overlay" *ngIf="isOpen" (click)="closeForm()"></div>
+<!-- MODAL OVERLAY -->
+<div *ngIf="isOpen" class="form-overlay" (click)="closeForm()"></div>
 
-<!-- Modal Formulario -->
-<div class="modal-form" *ngIf="isOpen">
-  <!-- Header -->
-  <div class="form-header">
-    <h2 class="form-title">Califica tu experiencia</h2>
-    <button
-      class="form-close"
-      type="button"
-      (click)="closeForm()"
-      aria-label="Cerrar"
-    >
-      ✕
-    </button>
-  </div>
-
-  <!-- Body -->
-  <div class="form-body">
-    <!-- Error -->
-    <div *ngIf="error" class="alert alert-error">
-      <span class="alert-icon">⚠️</span>
-      <span class="alert-text">{{ error }}</span>
+<!-- MODAL FORMULARIO -->
+<div *ngIf="isOpen" class="form-modal">
+  <div class="form-container">
+    <!-- HEADER -->
+    <div class="form-header">
+      <h2>✍️ Califica tu experiencia</h2>
+      <button class="close-btn" type="button" (click)="closeForm()">✕</button>
     </div>
 
-    <!-- Campo: Calificación (Estrellas) -->
-    <fieldset class="form-group">
-      <legend class="form-label">Calificación</legend>
-      <div class="stars-input">
-        <button
-          *ngFor="let star of getStars()"
-          type="button"
-          class="star-btn"
-          [class.filled]="isStarFilled(star)"
-          (click)="setCalificacion(star)"
-          [attr.aria-label]="'Calificar ' + star + ' estrella' + (star !== 1 ? 's' : '')"
-        >
-          ★
-        </button>
+    <!-- DIVIDER -->
+    <div class="form-divider"></div>
+
+    <!-- BODY -->
+    <div class="form-body">
+      
+      <!-- MENSAJE DE ADVERTENCIA (SI EXISTE RESEÑA ANTERIOR) -->
+      <div *ngIf="error?.includes('Ya has calificado')" class="alert alert-warning">
+        <span class="alert-icon">⚠️</span>
+        <span class="alert-text">Ya has calificado a este nutriólogo. Edita tu reseña existente.</span>
       </div>
-      <p class="stars-label" *ngIf="calificacion">
-        {{ calificacion }} de 5 estrellas
-      </p>
-    </fieldset>
 
-    <!-- Campo: Título (opcional) -->
-    <fieldset class="form-group">
-      <label for="titulo" class="form-label">Título (opcional)</label>
-      <input
-        id="titulo"
-        type="text"
-        class="form-input"
-        [(ngModel)]="titulo"
-        placeholder="Ej: Excelente servicio y atención"
-        maxlength="150"
-        [disabled]="submitting"
-      />
-      <p class="form-hint">Máximo 150 caracteres</p>
-    </fieldset>
+      <!-- MENSAJE DE ERROR -->
+      <div *ngIf="error && !error.includes('Ya has calificado')" class="alert alert-error">
+        <span class="alert-icon">❌</span>
+        <span class="alert-text">{{ error }}</span>
+        <button class="alert-action" type="button" (click)="retry()">Reintentar</button>
+      </div>
 
-    <!-- Campo: Comentario -->
-    <fieldset class="form-group">
-      <label for="comentario" class="form-label">Tu experiencia</label>
-      <textarea
-        id="comentario"
-        class="form-textarea"
-        [(ngModel)]="comentario"
-        (input)="onCommentChange()"
-        placeholder="Cuéntanos cómo fue tu experiencia con este nutriólogo..."
-        maxlength="1000"
-        rows="6"
-        [disabled]="submitting"
-        required
-      ></textarea>
-      <div class="textarea-info">
-        <p class="form-hint" *ngIf="commentLength === 0">
-          Mínimo 10 caracteres recomendados
-        </p>
-        <p class="textarea-counter">
-          {{ commentLength }} / {{ maxCommentLength }}
+      <!-- MENSAJE DE ÉXITO -->
+      <div *ngIf="successMessage" class="alert alert-success">
+        <span class="alert-icon">✅</span>
+        <span class="alert-text">{{ successMessage }}</span>
+      </div>
+
+      <!-- SECCIÓN: CALIFICACIÓN EN ESTRELLAS - MEJORADA ✨ -->
+      <div class="form-section">
+        <label class="form-label">
+          ⭐ Calificación <span class="required">*</span>
+        </label>
+        
+        <!-- Selector de estrellas interactivo -->
+        <div class="stars-selector">
+          <div class="stars-display">
+            <button
+              *ngFor="let star of getStars()"
+              type="button"
+              class="star-option"
+              [class.active]="isStarFilled(star)"
+              (click)="setCalificacion(star)"
+              [attr.aria-label]="'Calificar con ' + star + ' estrellas'"
+              [attr.title]="star + ' estrella' + (star !== 1 ? 's' : '')">
+              <span class="star-icon">⭐</span>
+            </button>
+          </div>
+          
+          <!-- Texto de retroalimentación -->
+          <div class="stars-feedback">
+            <span class="stars-number">{{ calificacion }}</span>
+            <span class="stars-label">
+              <span *ngIf="calificacion === 1">Muy malo</span>
+              <span *ngIf="calificacion === 2">Malo</span>
+              <span *ngIf="calificacion === 3">Regular</span>
+              <span *ngIf="calificacion === 4">Bueno</span>
+              <span *ngIf="calificacion === 5">Excelente</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN: TÍTULO (OPCIONAL) -->
+      <div class="form-section">
+        <label class="form-label" for="titulo">
+          Título (opcional)
+        </label>
+        <input
+          id="titulo"
+          type="text"
+          class="form-input"
+          placeholder="Ej: Excelente servicio, Muy profesional..."
+          [(ngModel)]="titulo"
+          maxlength="150"
+          [disabled]="submitting">
+        <p class="form-hint">Máximo 150 caracteres</p>
+      </div>
+
+      <!-- SECCIÓN: COMENTARIO -->
+      <div class="form-section">
+        <label class="form-label" for="comentario">
+          Tu experiencia <span class="required">*</span>
+        </label>
+        <textarea
+          id="comentario"
+          class="form-textarea"
+          placeholder="Cuéntanos sobre tu experiencia con este nutriólogo..."
+          [(ngModel)]="comentario"
+          (ngModelChange)="onCommentChange()"
+          maxlength="1000"
+          rows="6"
+          [disabled]="submitting"></textarea>
+        <p class="form-hint">
+          {{ commentLength }} / {{ maxCommentLength }} caracteres
+          <span *ngIf="commentLength >= maxCommentLength" class="hint-warning">
+            (Límite alcanzado)
+          </span>
         </p>
       </div>
-    </fieldset>
-  </div>
 
-  <!-- Footer -->
-  <div class="form-footer">
-    <button
-      class="btn btn-secondary"
-      type="button"
-      (click)="closeForm()"
-      [disabled]="submitting"
-    >
-      Cancelar
-    </button>
-    <button
-      class="btn btn-primary"
-      type="button"
-      (click)="submit()"
-      [disabled]="!isValid() || submitting"
-    >
-      <span *ngIf="!submitting">✓ Enviar reseña</span>
-      <span *ngIf="submitting">
-        <span class="spinner-mini"></span> Enviando...
-      </span>
-    </button>
+    </div>
+
+    <!-- DIVIDER -->
+    <div class="form-divider"></div>
+
+    <!-- FOOTER -->
+    <div class="form-footer">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="closeForm()"
+        [disabled]="submitting">
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="submit()"
+        [disabled]="submitting || !isValid()">
+        <span *ngIf="!submitting">✓ Enviar reseña</span>
+        <span *ngIf="submitting">⏳ Enviando...</span>
+      </button>
+    </div>
+
   </div>
 </div>

@@ -1,7 +1,7 @@
 """
 API Backend para Reseñas y Calificaciones de Nutriólogos
 Endpoints:
-- POST /api/resenas -> Crear reseña
+- POST /api/resenas -> Crear reseña (✅ SIN restricción de reseña única)
 - GET /api/resenas/{id} -> Obtener detalle de reseña
 - GET /api/resenas/nutriologo/{id} -> Listar reseñas de un nutriólogo
 - PUT /api/resenas/{id} -> Editar reseña (solo cliente dueño)
@@ -23,8 +23,6 @@ from models.user import Usuario
 
 logger = logging.getLogger(__name__)
 
-# ✅ IMPORTANTE: El router NO tiene prefijo aquí
-# El prefijo se agrega en main.py con: app.include_router(resenas.router, prefix="/api/resenas")
 router = APIRouter(tags=["Reseñas"])
 
 DbDep = Annotated[Session, Depends(get_db)]
@@ -94,13 +92,14 @@ def crear_resena(
     user: UserDep
 ):
     """
-    Crea una nueva reseña (cualquier usuario autenticado)
-    ✅ SIN RESTRICCIONES: Clientes, nutriólogos, todos pueden crear reseñas
+    ✅ CREAR RESEÑA - SIN RESTRICCIÓN DE RESEÑA ÚNICA
+
+    Ahora un cliente PUEDE escribir múltiples reseñas al mismo nutriólogo.
+    Cada reseña es independiente (diferentes fechas, calificaciones, comentarios).
     """
     try:
         logger.info(f"📝 Iniciando creación de reseña...")
 
-        # ✅ CAMBIO: Obtener ID del usuario autenticado sin validar tipo
         id_usuario = getattr(user, "id_usuario", None) or getattr(user, "id", None)
 
         logger.info(f"   ID usuario: {id_usuario}")
@@ -113,7 +112,7 @@ def crear_resena(
                 detail="No se pudo identificar al usuario"
             )
 
-        # Verificar que el nutriólogo a reseñar existe
+        # ✅ VALIDACIÓN: Nutriólogo existe
         logger.info(f"   Buscando nutriólogo ID: {payload.id_nutriologo}")
         nutriologo = db.query(Usuario).filter(
             Usuario.id_usuario == payload.id_nutriologo
@@ -128,25 +127,7 @@ def crear_resena(
 
         logger.info(f"✅ Nutriólogo encontrado: {nutriologo.nombre}")
 
-        # Verificar que no exista reseña previa del mismo usuario
-        logger.info(f"   Verificando reseña existente...")
-        existente = db.query(Resena).filter(
-            and_(
-                Resena.id_cliente == id_usuario,
-                Resena.id_nutriologo == payload.id_nutriologo
-            )
-        ).first()
-
-        if existente:
-            logger.warning(f"❌ Reseña existente encontrada")
-            raise HTTPException(
-                status_code=400,
-                detail="Ya has calificado a este nutriólogo. Edita tu reseña existente."
-            )
-
-        logger.info(f"✅ No hay reseña previa")
-
-        # ✅ NO permitir auto-reseñas (no puedes reseñarte a ti mismo)
+        # ✅ VALIDACIÓN: No auto-reseñarse
         if id_usuario == payload.id_nutriologo:
             logger.warning(f"❌ Intento de auto-reseña")
             raise HTTPException(
@@ -154,7 +135,10 @@ def crear_resena(
                 detail="No puedes reseñarte a ti mismo"
             )
 
-        # Crear reseña
+        # ✅ CAMBIO CRÍTICO: ELIMINADA la validación de reseña existente
+        # ❌ ANTES: Buscaba si ya existía una reseña del mismo usuario
+        # ✅ AHORA: Permite crear múltiples reseñas sin restricción
+
         logger.info(f"   Creando objeto Resena...")
         resena = Resena(
             id_cliente=id_usuario,
@@ -176,7 +160,7 @@ def crear_resena(
         return {
             "ok": True,
             "id_resena": resena.id_resena,
-            "message": "Reseña creada exitosamente"
+            "message": "✅ Reseña creada exitosamente"
         }
 
     except HTTPException as he:
@@ -226,12 +210,14 @@ def obtener_resena(
 def listar_resenas_nutriologo(
     nutri_id: int,
     db: DbDep,
-    solo_verificadas: bool = True,
-    limit: int = 10,
+    solo_verificadas: bool = False,
+    limit: int = 20,
     offset: int = 0
 ):
     """
     Obtiene las reseñas de un nutriólogo (público)
+
+    ✅ CAMBIO: solo_verificadas por defecto es False (muestra todas)
     """
     try:
         # Verificar que el nutriólogo existe
@@ -318,7 +304,7 @@ def actualizar_resena(
         return {
             "ok": True,
             "id_resena": resena.id_resena,
-            "message": "Reseña actualizada"
+            "message": "✅ Reseña actualizada"
         }
 
     except HTTPException:
@@ -356,7 +342,7 @@ def eliminar_resena(
 
         return {
             "ok": True,
-            "message": "Reseña eliminada"
+            "message": "✅ Reseña eliminada"
         }
 
     except HTTPException:
@@ -374,7 +360,7 @@ def estadisticas_resenas(
 ):
     """
     Obtiene estadísticas agregadas de un nutriólogo (público)
-    - Total de reseñas verificadas
+    - Total de reseñas
     - Calificación promedio
     - Distribución por estrellas
     """
@@ -386,12 +372,9 @@ def estadisticas_resenas(
         if not nutriologo:
             raise HTTPException(status_code=404, detail="Nutriólogo no encontrado")
 
-        # Resenas verificadas
+        # ✅ CAMBIO: Obtener todas las reseñas (no solo verificadas)
         resenas = db.query(Resena).filter(
-            and_(
-                Resena.id_nutriologo == nutri_id,
-                Resena.verificado == True
-            )
+            Resena.id_nutriologo == nutri_id
         ).all()
 
         total = len(resenas)
@@ -406,7 +389,7 @@ def estadisticas_resenas(
 
         # Promedio
         suma_cal = sum(r.calificacion for r in resenas)
-        promedio = round(suma_cal / total, 2)
+        promedio = round(suma_cal / total, 1)
 
         # Distribución (redondea hacia arriba para medias estrellas)
         distribucion = {"5": 0, "4": 0, "3": 0, "2": 0, "1": 0}

@@ -124,6 +124,7 @@
 <!-- Modal: Crear Reseña -->
 <app-resena-form
   [nutriologoId]="data?.id_usuario"
-  (onSuccess)="onResenaCreated()"
-  (onCancel)="closeFormResena()">
+  [isOpen]="showFormResena"
+  (success)="onResenaCreated()"
+  (close)="closeFormResena()">
 </app-resena-form>
