@@ -3,6 +3,7 @@
 # Desarrollado con FastAPI
 # Arquitectura modular con routers, modelos y servicios
 # ACTUALIZADO: Autenticación consolidada en core/deps
+# ACTUALIZADO: Router de mensajes integrado
 # ===============================================
 
 import os
@@ -11,7 +12,7 @@ from fastapi import FastAPI, Request, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from routers import resenas
+
 # 🔹 CARGAR VARIABLES DE ENTORNO (IMPORTANTE!)
 load_dotenv()
 
@@ -64,7 +65,9 @@ from config.database import Base, engine
 
 # 🔹 Carga todos los modelos UNA sola vez (evita redefinir tablas)
 import models  # <- usa models/__init__.py
-from routers import users, auth, contratos, clientes, catalogo_router, resenas
+
+# 🔹 IMPORTAR TODOS LOS ROUTERS (INCLUYENDO MENSAJES)
+from routers import users, auth, contratos, clientes, catalogo_router, resenas, router_mensajes
 
 # 🔹 ✅ NUEVO: Verificar que core/deps existe y funciona
 try:
@@ -141,6 +144,10 @@ app.include_router(catalogo_router.router)
 # Endpoints: /api/resenas/crear, /api/resenas/nutriologo/{id}, /api/resenas/stats/{id}, etc.
 app.include_router(resenas.router, prefix="/api/resenas")
 
+# ✅ mensajes_router: Mensajes entre usuarios (NUEVO)
+# Endpoints: /api/mensajes/no-leidos, /api/mensajes/conversaciones, /api/mensajes/enviar, etc.
+app.include_router(router_mensajes.router)
+
 # ===============================================
 # Puente /nutriologos/validacion → /users/nutriologos/validacion
 # ===============================================
@@ -208,6 +215,7 @@ print("   ✅ /api/users/* (me, perfil, nutriologos)")
 print("   ✅ /api/clientes/* (mis-clientes, dietas)")
 print("   ✅ /api/contratos/* (pagos, contratos)")
 print("   ✅ /api/resenas/* (crear, listar, stats)")
+print("   ✅ /api/mensajes/* (no-leidos, conversaciones, enviar) [NUEVO]")
 print("=" * 60 + "\n")
 
 # Ejecuta: uvicorn main:app --reload --port 8000

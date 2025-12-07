@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, interval } from 'rxjs';
 import { map, switchMap, tap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { AuthService } from './auth.service';
 
 export interface Mensaje {
   id: number;
@@ -46,10 +47,27 @@ export class MensajesService {
   public conversacionActual$ = this.conversacionActualSubject.asObservable();
   public mensajesNoLeidos$ = this.mensajesNoLeidosSubject.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {
     // Obtener la URL de la API - Prioridad: 1) localStorage, 2) window, 3) valor por defecto
     this.apiUrl = this.obtenerApiUrl();
     this.iniciarPollMensajes();
+  }
+
+  /**
+   * 🔐 OBTENER HEADERS CON TOKEN
+   */
+  private getHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    if (!token) {
+      console.warn('⚠️  No hay token disponible para autenticación');
+    }
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
   }
 
   /**
@@ -94,13 +112,14 @@ export class MensajesService {
     return this.http.post<Mensaje>(`${this.apiUrl}/enviar`, {
       destinatario_id,
       contenido
-    }).pipe(
+    }, { headers: this.getHeaders() }).pipe(
       tap(() => {
+        console.log('✅ Mensaje enviado');
         // Recargar conversaciones después de enviar
-        this.cargarConversaciones();
+        this.cargarConversaciones().subscribe();
       }),
       catchError(error => {
-        console.error('Error al enviar mensaje:', error);
+        console.error('❌ Error al enviar mensaje:', error);
         throw error;
       })
     );
@@ -110,12 +129,16 @@ export class MensajesService {
    * Obtener lista de conversaciones
    */
   cargarConversaciones(): Observable<Conversacion[]> {
-    return this.http.get<Conversacion[]>(`${this.apiUrl}/conversaciones`).pipe(
+    console.log('📋 Cargando conversaciones...');
+    return this.http.get<Conversacion[]>(`${this.apiUrl}/conversaciones`, { 
+      headers: this.getHeaders() 
+    }).pipe(
       tap(conversaciones => {
+        console.log(`✅ ${conversaciones.length} conversaciones cargadas`);
         this.conversacionesSubject.next(conversaciones);
       }),
       catchError(error => {
-        console.error('Error al cargar conversaciones:', error);
+        console.error('❌ Error al cargar conversaciones:', error);
         return of([]);
       })
     );
@@ -125,12 +148,16 @@ export class MensajesService {
    * Obtener conversación detallada con otro usuario
    */
   obtenerConversacion(usuario_id: number): Observable<ConversacionDetalle> {
-    return this.http.get<ConversacionDetalle>(`${this.apiUrl}/conversacion/${usuario_id}`).pipe(
+    console.log(`💬 Cargando conversación con usuario ${usuario_id}...`);
+    return this.http.get<ConversacionDetalle>(`${this.apiUrl}/chat/${usuario_id}`, { 
+      headers: this.getHeaders() 
+    }).pipe(
       tap(conversacion => {
+        console.log(`✅ Conversación cargada con ${conversacion.mensajes.length} mensajes`);
         this.conversacionActualSubject.next(conversacion);
       }),
       catchError(error => {
-        console.error('Error al obtener conversación:', error);
+        console.error('❌ Error al obtener conversación:', error);
         throw error;
       })
     );
@@ -140,13 +167,16 @@ export class MensajesService {
    * Marcar mensaje como leído
    */
   marcarComoLeido(mensaje_id: number): Observable<any> {
-    return this.http.put(`${this.apiUrl}/marcar-leido/${mensaje_id}`, {}).pipe(
+    return this.http.put(`${this.apiUrl}/${mensaje_id}/marcar-leido`, {}, { 
+      headers: this.getHeaders() 
+    }).pipe(
       tap(() => {
+        console.log(`✅ Mensaje ${mensaje_id} marcado como leído`);
         // Actualizar conversaciones después de marcar como leído
-        this.cargarConversaciones();
+        this.cargarConversaciones().subscribe();
       }),
       catchError(error => {
-        console.error('Error al marcar como leído:', error);
+        console.error('❌ Error al marcar como leído:', error);
         return of(null);
       })
     );
@@ -155,15 +185,18 @@ export class MensajesService {
   /**
    * Obtener cantidad de mensajes no leídos
    */
-  cargarMensajesNoLeidos(): Observable<number> {
-    return this.http.get<{ mensajes_no_leidos: number }>(`${this.apiUrl}/no-leidos`).pipe(
-      map(response => response.mensajes_no_leidos),
-      tap(count => {
-        this.mensajesNoLeidosSubject.next(count);
+  cargarMensajesNoLeidos(): Observable<{ no_leidos: number; conversaciones_no_leidas: number }> {
+    return this.http.get<{ no_leidos: number; conversaciones_no_leidas: number }>(
+      `${this.apiUrl}/no-leidos`, 
+      { headers: this.getHeaders() }
+    ).pipe(
+      tap(response => {
+        console.log(`📬 ${response.no_leidos} mensajes no leídos`);
+        this.mensajesNoLeidosSubject.next(response.no_leidos);
       }),
       catchError(error => {
-        console.error('Error al cargar mensajes no leídos:', error);
-        return of(0);
+        console.error('❌ Error al cargar mensajes no leídos:', error);
+        return of({ no_leidos: 0, conversaciones_no_leidas: 0 });
       })
     );
   }

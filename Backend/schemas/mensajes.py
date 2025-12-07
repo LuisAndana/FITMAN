@@ -1,46 +1,54 @@
-from pydantic import BaseModel
+"""
+Backend/schemas/mensajes.py
+Schemas Pydantic para validación de mensajes
+"""
+
+from pydantic import BaseModel, Field
+from typing import Optional, List
 from datetime import datetime
-from typing import Optional
+
 
 class MensajeCreate(BaseModel):
-    destinatario_id: int
-    contenido: str
+    """Schema para crear un mensaje"""
+    destinatario_id: int = Field(..., gt=0, description="ID del usuario destinatario")
+    contenido: str = Field(..., min_length=1, max_length=1000, description="Contenido del mensaje")
 
-    class Config:
-        from_attributes = True
 
 class MensajeResponse(BaseModel):
+    """Schema para responder un mensaje"""
     id: int
     remitente_id: int
     destinatario_id: int
     contenido: str
     leido: bool
-    fecha_creacion: datetime
-    fecha_actualizacion: datetime
+    fecha_creacion: Optional[str] = None
+    fecha_actualizacion: Optional[str] = None
 
     class Config:
         from_attributes = True
 
+
 class ConversacionResponse(BaseModel):
-    """Modelo para representar una conversación con el último mensaje"""
+    """Schema para listar conversaciones"""
     otro_usuario_id: int
     otro_usuario_nombre: str
     otro_usuario_foto: Optional[str] = None
-    otro_usuario_tipo: str  # 'cliente' o 'nutriologo'
+    otro_usuario_tipo: str
     ultimo_mensaje: Optional[str] = None
-    fecha_ultimo_mensaje: Optional[datetime] = None
+    fecha_ultimo_mensaje: Optional[str] = None
     mensajes_no_leidos: int = 0
 
     class Config:
         from_attributes = True
 
+
 class ConversacionDetailResponse(BaseModel):
-    """Modelo para una conversación detallada con todos los mensajes"""
+    """Schema para detalle de conversación con mensajes"""
     otro_usuario_id: int
     otro_usuario_nombre: str
     otro_usuario_foto: Optional[str] = None
     otro_usuario_tipo: str
-    mensajes: list[MensajeResponse]
+    mensajes: List[MensajeResponse] = []
 
     class Config:
         from_attributes = True

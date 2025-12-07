@@ -33,5 +33,5 @@ __all__ = [
     "Contrato",
     "EstadoContrato",
     "Resena",
-    "mensajes"
+    "Mensaje"
 ]

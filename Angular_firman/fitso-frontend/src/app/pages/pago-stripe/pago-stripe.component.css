@@ -10,6 +10,7 @@
   --success-light: #d1fae5;
   --danger: #ef4444;
   --warning: #f59e0b;
+  --warning-light: #fef08a;
   --dark-bg: #0f0f0f;
   --dark-card: #1a1a1a;
   --dark-border: #2d2d2d;
@@ -543,21 +544,26 @@
 }
 
 /* ============================================
-   ESTADO: ERROR
+   ESTADO: ERROR - CONTRATO ACTIVO (409)
    ============================================ */
 
-.estado-error {
+.estado-error-contracto {
   max-width: 600px;
   margin: 0 auto;
   animation: slide-down 0.3s ease-out;
 }
 
 .alert {
-  padding: 20px;
+  padding: 24px;
   border-radius: 12px;
   margin-bottom: 25px;
   display: flex;
   gap: 15px;
+}
+
+.alert-warning {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .alert-error {
@@ -566,31 +572,66 @@
 }
 
 .alert-icon {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   flex-shrink: 0;
+  line-height: 1;
 }
 
 .alert-content h3 {
   margin: 0 0 8px 0;
   color: var(--text-primary);
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
 .alert-content p {
   margin: 0;
   color: var(--text-secondary);
   font-size: 0.95rem;
+  line-height: 1.6;
 }
 
 .error-actions {
   display: flex;
   gap: 15px;
   justify-content: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .error-actions .btn {
   flex: 1;
-  max-width: 200px;
+  min-width: 180px;
+}
+
+/* Error Note */
+.error-note {
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+
+.error-note p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.error-note strong {
+  color: var(--text-primary);
+}
+
+/* ============================================
+   ESTADO: ERROR GENERAL
+   ============================================ */
+
+.estado-error {
+  max-width: 600px;
+  margin: 0 auto;
+  animation: slide-down 0.3s ease-out;
 }
 
 /* ============================================
@@ -852,6 +893,10 @@
   .error-actions .btn {
     max-width: 100%;
   }
+
+  .alert {
+    flex-direction: column;
+  }
 }
 
 @media (max-width: 480px) {
@@ -873,7 +918,9 @@
 
   .resumen-section,
   .formulario-section,
-  .info-section {
+  .info-section,
+  .estado-error-contracto,
+  .estado-error {
     padding: 20px;
     border-radius: 12px;
   }
@@ -900,7 +947,7 @@
     font-size: 0.95rem;
   }
 
-  .btn.large {
+  .btn.primary.large {
     padding: 12px 16px;
   }
 
@@ -923,12 +970,16 @@
   }
 
   .alert {
-    flex-direction: column;
     gap: 10px;
+    padding: 16px;
   }
 
   .alert-icon {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
+  }
+
+  .alert-content h3 {
+    font-size: 1rem;
   }
 
   .error-actions {
@@ -938,6 +989,11 @@
 
   .error-actions .btn {
     width: 100%;
+  }
+
+  .error-note {
+    padding: 12px;
+    font-size: 0.85rem;
   }
 }
 

@@ -305,6 +305,11 @@ export class PagoStripeComponent implements OnInit, AfterViewInit {
           paymentIntentId: resultado.paymentIntent.id,
           timestamp: new Date().toISOString(),
         }));
+
+        // Redirigir después de 2 segundos
+        setTimeout(() => {
+          this.router.navigate(['/dashboard']);
+        }, 2000);
       } else {
         console.warn('⚠️ Pago no completado, status:', resultado.paymentIntent?.status);
         this.error = 'El pago no se completó. Por favor, intenta de nuevo.';
@@ -325,18 +330,7 @@ export class PagoStripeComponent implements OnInit, AfterViewInit {
       throw new Error('Contrato no disponible');
     }
 
-    // Obtener token del localStorage
-    const token = localStorage.getItem('access_token') || '';
-    const usuarioId = 1; // Por defecto, ajusta según tu lógica
-
-    const payload = {
-      id_nutriologo: this.contrato.id_nutriologo,
-      monto: this.contrato.monto,
-      duracion_meses: this.contrato.duracion_meses,
-      descripcion_servicios: this.contrato.descripcion_servicios || 'Servicio de nutrición',
-    };
-
-    console.log('📤 Payload de PaymentIntent:', payload);
+    console.log('🚀 Llamando ContratoService.crearPaymentIntent()...');
 
     try {
       const response: any = await this.contratoService.crearPaymentIntent(
@@ -346,11 +340,40 @@ export class PagoStripeComponent implements OnInit, AfterViewInit {
         this.contrato.descripcion_servicios || 'Servicio de nutrición'
       ).toPromise();
       
-      console.log('✅ Respuesta del servidor:', response);
+      console.log('✅ Respuesta exitosa del servidor:', response);
       return response;
     } catch (err: any) {
-      console.error('❌ Error creando PaymentIntent:', err);
-      throw new Error(err.error?.mensaje || 'Error al crear el pago en el servidor');
+      console.error('❌ Error en ContratoService:', err);
+
+      // ✅ MANEJO MEJORADO DE ERRORES
+      if (err.code === 'CONFLICT_ERROR') {
+        // Error 409: Contrato activo previo
+        throw new Error(
+          `Ya tienes un contrato activo con ${this.contrato.nutriologo_nombre}. ` +
+          `Cancela el contrato anterior para contratar de nuevo.`
+        );
+      } else if (err.code === 'VALIDATION_ERROR') {
+        // Error 400: Validación
+        throw new Error(err.userMessage || 'Los datos del contrato son inválidos');
+      } else if (err.code === 'AUTH_ERROR') {
+        // Error 401: No autenticado
+        throw new Error('Tu sesión expiró. Por favor, inicia sesión nuevamente');
+      } else if (err.code === 'FORBIDDEN_ERROR') {
+        // Error 403: No autorizado
+        throw new Error('No tienes permiso para realizar esta acción');
+      } else if (err.code === 'NOT_FOUND_ERROR') {
+        // Error 404: No encontrado
+        throw new Error('El nutriólogo no fue encontrado o no está disponible');
+      } else if (err.code === 'NETWORK_ERROR') {
+        // Error de red
+        throw new Error('Error de conexión. Verifica tu internet e intenta de nuevo');
+      } else {
+        // Error desconocido
+        throw new Error(
+          err.userMessage || 
+          'Error al crear el pago. Por favor, intenta de nuevo.'
+        );
+      }
     }
   }
 
@@ -371,6 +394,14 @@ export class PagoStripeComponent implements OnInit, AfterViewInit {
   irAlDashboard(): void {
     console.log('🔀 Navegando al dashboard...');
     this.router.navigate(['/dashboard']);
+  }
+
+  /**
+   * Navega de vuelta a contratar
+   */
+  volverAContratar(): void {
+    console.log('🔀 Volviendo a contratar...');
+    this.router.navigate(['/pacientes']);
   }
 
   // ========== GETTERS ==========
@@ -400,5 +431,12 @@ export class PagoStripeComponent implements OnInit, AfterViewInit {
    */
   get formularioValido(): boolean {
     return this.form.valid && this.aceptaTerminos && !this.procesandoPago;
+  }
+
+  /**
+   * Verifica si hay un error de contrato activo
+   */
+  get esErrorContratoActivo(): boolean {
+    return this.error?.includes('contrato activo') || false;
   }
 }

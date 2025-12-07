@@ -1,23 +1,27 @@
 # Backend/routers/contratos.py
 # ===============================================
-# Router mejorado para Contratos
+# Router de Contratos - COMPLETO Y FUNCIONAL
 # ===============================================
 
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
+from datetime import datetime, timedelta
 from typing import List
+import logging
 
 from config.database import get_db
 from models.user import Usuario, TipoUsuarioEnum
 from models.contrato import Contrato, EstadoContrato
 from schemas.contrato import PagoStripeRequest, PagoStripeResponse, ContratoDetailResponse
 from services.stripe_service import StripeService
-import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/contratos", tags=["contratos"])
 
 
+# ============================================================================
+# POST /api/contratos/crear-payment-intent
+# ============================================================================
 @router.post(
     "/crear-payment-intent",
     response_model=PagoStripeResponse,
@@ -28,12 +32,9 @@ async def crear_payment_intent(
         db: Session = Depends(get_db)
 ):
     """
-    Crear un PaymentIntent en Stripe para iniciar un contrato.
+    ✅ Crear un PaymentIntent en Stripe para iniciar un contrato.
 
-    - Validar que el usuario es cliente
-    - Validar que el nutriólogo existe y está validado
-    - Evitar duplicados
-    - Crear PaymentIntent
+    Estado inicial: PENDIENTE (hasta que se confirme el pago)
     """
 
     usuario_id = datos.usuario_id
@@ -163,6 +164,9 @@ async def crear_payment_intent(
         )
 
 
+# ============================================================================
+# POST /api/contratos/confirmar-pago/{payment_intent_id}
+# ============================================================================
 @router.post("/confirmar-pago/{payment_intent_id}", response_model=PagoStripeResponse)
 async def confirmar_pago(
         payment_intent_id: str,
@@ -170,7 +174,9 @@ async def confirmar_pago(
         db: Session = Depends(get_db)
 ):
     """
-    Confirmar que el pago fue exitoso y activar el contrato.
+    ✅ CONFIRMAR PAGO Y ACTIVAR CONTRATO
+
+    Cambiar estado de PENDIENTE → ACTIVO
     """
 
     usuario_id = data.get("usuario_id")
@@ -204,15 +210,33 @@ async def confirmar_pago(
                 detail=resultado.get("error", "Error al confirmar pago")
             )
 
-        logger.info(f"✅ Pago confirmado: {payment_intent_id}")
+        contrato_id = resultado.get("contrato_id")
+
+        # ✅ PASO CRÍTICO: Cambiar estado de PENDIENTE a ACTIVO
+        contrato = db.query(Contrato).filter(
+            Contrato.id_contrato == contrato_id
+        ).first()
+
+        if contrato:
+            logger.info(f"📝 Actualizando contrato {contrato_id} de {contrato.estado} a ACTIVO")
+
+            contrato.estado = EstadoContrato.ACTIVO
+            contrato.fecha_inicio = datetime.utcnow()
+            contrato.fecha_fin = contrato.fecha_inicio + timedelta(days=30 * contrato.duracion_meses)
+
+            db.commit()
+            logger.info(f"✅ Contrato {contrato_id} activado correctamente")
+        else:
+            logger.error(f"❌ Contrato {contrato_id} no encontrado después de confirmar pago")
 
         return PagoStripeResponse(
             exito=True,
-            mensaje=resultado.get("mensaje", "Pago confirmado exitosamente"),
-            contrato_id=resultado.get("contrato_id")
+            mensaje="Pago confirmado y contrato activado",
+            contrato_id=contrato_id
         )
 
     except Exception as e:
+        db.rollback()
         logger.exception(f"❌ Error confirmando pago: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -220,6 +244,75 @@ async def confirmar_pago(
         )
 
 
+# ============================================================================
+# GET /api/contratos/mis-contratos/{usuario_id}
+# ============================================================================
+@router.get("/mis-contratos/{usuario_id}")
+async def obtener_mis_contratos(
+        usuario_id: int,
+        db: Session = Depends(get_db)
+):
+    """
+    ✅ OBTENER MIS CONTRATOS (cliente o nutriólogo)
+    """
+
+    logger.info(f"📋 Obteniendo contratos del usuario {usuario_id}")
+
+    try:
+        # ✅ Obtener contratos donde el usuario es cliente O nutriólogo
+        contratos = db.query(Contrato).filter(
+            (Contrato.id_cliente == usuario_id) | (Contrato.id_nutriologo == usuario_id)
+        ).order_by(Contrato.fecha_creacion.desc()).all()
+
+        logger.info(f"✅ Encontrados {len(contratos)} contratos")
+
+        resultado = []
+
+        for contrato in contratos:
+            # Obtener datos del cliente
+            cliente = db.query(Usuario).filter(
+                Usuario.id_usuario == contrato.id_cliente
+            ).first()
+
+            # Obtener datos del nutriólogo
+            nutriologo = db.query(Usuario).filter(
+                Usuario.id_usuario == contrato.id_nutriologo
+            ).first()
+
+            resultado.append({
+                "id_contrato": contrato.id_contrato,
+                "id_cliente": contrato.id_cliente,
+                "id_nutriologo": contrato.id_nutriologo,
+                "cliente_nombre": cliente.nombre if cliente else "Desconocido",
+                "nutriologo_nombre": nutriologo.nombre if nutriologo else "Desconocido",
+                "monto": float(contrato.monto),
+                "moneda": contrato.moneda or "usd",
+                "estado": contrato.estado.value,
+                "duracion_meses": contrato.duracion_meses,
+                "descripcion_servicios": contrato.descripcion_servicios,
+                "fecha_creacion": contrato.fecha_creacion.isoformat() if contrato.fecha_creacion else None,
+                "fecha_inicio": contrato.fecha_inicio.isoformat() if contrato.fecha_inicio else None,
+                "fecha_fin": contrato.fecha_fin.isoformat() if contrato.fecha_fin else None
+            })
+
+        logger.info(f"✅ Retornando {len(resultado)} contratos")
+
+        return {
+            "total": len(resultado),
+            "contratos": resultado
+        }
+
+    except Exception as e:
+        logger.error(f"❌ Error al obtener contratos: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener contratos: {str(e)}"
+        )
+
+
+# ============================================================================
+# GET /api/contratos/obtener/{contrato_id}
+# ============================================================================
 @router.get("/obtener/{contrato_id}", response_model=ContratoDetailResponse)
 async def obtener_contrato(
         contrato_id: int,
@@ -267,71 +360,9 @@ async def obtener_contrato(
     )
 
 
-@router.get("/mis-contratos/{usuario_id}")
-async def listar_mis_contratos(
-        usuario_id: int,
-        db: Session = Depends(get_db)
-):
-    """
-    Listar todos los contratos del usuario (como cliente o nutriólogo).
-    """
-
-    # ✅ Obtener usuario
-    usuario = db.query(Usuario).filter(Usuario.id_usuario == usuario_id).first()
-
-    if not usuario:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuario no encontrado"
-        )
-
-    try:
-        if usuario.tipo_usuario == TipoUsuarioEnum.cliente:
-            # Listar contratos como cliente
-            contratos = db.query(Contrato).filter(
-                Contrato.id_cliente == usuario_id
-            ).order_by(Contrato.fecha_creacion.desc()).all()
-        else:
-            # Listar contratos como nutriólogo
-            contratos = db.query(Contrato).filter(
-                Contrato.id_nutriologo == usuario_id
-            ).order_by(Contrato.fecha_creacion.desc()).all()
-
-        resultado = []
-        for contrato in contratos:
-            if usuario.tipo_usuario == TipoUsuarioEnum.cliente:
-                otro_usuario = db.query(Usuario).filter(
-                    Usuario.id_usuario == contrato.id_nutriologo
-                ).first()
-            else:
-                otro_usuario = db.query(Usuario).filter(
-                    Usuario.id_usuario == contrato.id_cliente
-                ).first()
-
-            resultado.append({
-                "id_contrato": contrato.id_contrato,
-                "otro_usuario_nombre": otro_usuario.nombre if otro_usuario else "Desconocido",
-                "monto": contrato.monto,
-                "estado": contrato.estado.value,
-                "duracion_meses": contrato.duracion_meses,
-                "fecha_creacion": contrato.fecha_creacion.isoformat(),
-                "fecha_inicio": contrato.fecha_inicio.isoformat() if contrato.fecha_inicio else None,
-                "fecha_fin": contrato.fecha_fin.isoformat() if contrato.fecha_fin else None,
-            })
-
-        return {
-            "total": len(resultado),
-            "contratos": resultado
-        }
-
-    except Exception as e:
-        logger.exception(f"❌ Error listando contratos: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al obtener los contratos"
-        )
-
-
+# ============================================================================
+# POST /api/contratos/cancelar/{contrato_id}
+# ============================================================================
 @router.post("/cancelar/{contrato_id}")
 async def cancelar_contrato(
         contrato_id: int,
@@ -340,7 +371,6 @@ async def cancelar_contrato(
 ):
     """
     Cancelar un contrato (solo cliente puede hacerlo).
-    Reembolso disponible dentro de 7 días de creación.
     """
 
     usuario_id = data.get("usuario_id")
@@ -389,84 +419,4 @@ async def cancelar_contrato(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al cancelar el contrato"
-        )
-
-
-@router.get("/mis-contratos/{usuario_id}")
-async def obtener_mis_contratos(
-        usuario_id: int,
-        db: Session = Depends(get_db)
-):
-    """
-    ✅ OBTENER MIS CONTRATOS (cliente o nutriólogo)
-
-    Retorna todos los contratos del usuario, ya sea como cliente o nutriólogo.
-    Incluye información del otro usuario y fechas importantes.
-
-    Ejemplo de respuesta:
-    {
-      "contratos": [
-        {
-          "id_contrato": 1,
-          "otro_usuario_nombre": "Dr. Juan Pérez",
-          "monto": 50.00,
-          "moneda": "usd",
-          "estado": "ACTIVO",
-          "duracion_meses": 1,
-          "fecha_creacion": "2024-01-15",
-          "fecha_inicio": "2024-01-16",
-          "fecha_fin": "2024-02-16"
-        }
-      ]
-    }
-    """
-
-    logger.info(f"📋 Obteniendo contratos del usuario {usuario_id}")
-
-    try:
-        # Obtener contratos donde el usuario es cliente O nutriólogo
-        contratos = db.query(Contrato).filter(
-            (Contrato.id_cliente == usuario_id) | (Contrato.id_nutriologo == usuario_id)
-        ).all()
-
-        logger.info(f"✅ Encontrados {len(contratos)} contratos")
-
-        resultado = []
-
-        for contrato in contratos:
-            # Determinar qué tipo de usuario somos y obtener nombre del otro
-            if contrato.id_cliente == usuario_id:
-                # Somos cliente, obtener nombre del nutriólogo
-                otro_usuario = db.query(Usuario).filter(
-                    Usuario.id_usuario == contrato.id_nutriologo
-                ).first()
-                otro_nombre = otro_usuario.nombre if otro_usuario else "Desconocido"
-            else:
-                # Somos nutriólogo, obtener nombre del cliente
-                otro_usuario = db.query(Usuario).filter(
-                    Usuario.id_usuario == contrato.id_cliente
-                ).first()
-                otro_nombre = otro_usuario.nombre if otro_usuario else "Desconocido"
-
-            resultado.append({
-                "id_contrato": contrato.id_contrato,
-                "otro_usuario_nombre": otro_nombre,
-                "monto": float(contrato.monto),
-                "moneda": contrato.moneda or "usd",
-                "estado": contrato.estado.value,
-                "duracion_meses": contrato.duracion_meses,
-                "fecha_creacion": contrato.fecha_creacion.isoformat() if contrato.fecha_creacion else None,
-                "fecha_inicio": contrato.fecha_inicio.isoformat() if contrato.fecha_inicio else None,
-                "fecha_fin": contrato.fecha_fin.isoformat() if contrato.fecha_fin else None
-            })
-
-        return {
-            "contratos": resultado
-        }
-
-    except Exception as e:
-        logger.error(f"❌ Error al obtener contratos: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al obtener contratos: {str(e)}"
         )

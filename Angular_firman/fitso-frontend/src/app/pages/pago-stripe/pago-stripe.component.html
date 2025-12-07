@@ -12,10 +12,34 @@
     <p>Cargando información del contrato...</p>
   </div>
 
-  <!-- ========== ESTADO: ERROR ========== -->
-  <div *ngIf="error && !cargando" class="estado-error fade-in">
-    <div class="alert alert-error">
+  <!-- ========== ESTADO: ERROR - CONTRATO ACTIVO ========== -->
+  <div *ngIf="esErrorContratoActivo && !cargando" class="estado-error-contracto fade-in">
+    <div class="alert alert-warning">
       <span class="alert-icon">⚠️</span>
+      <div class="alert-content">
+        <h3>Contrato Activo Existente</h3>
+        <p>{{ error }}</p>
+      </div>
+    </div>
+
+    <div class="error-actions">
+      <button class="btn primary" (click)="volverAContratar()" type="button">
+        🔄 Contratar Otro Nutriólogo
+      </button>
+      <button class="btn outline" (click)="irAlDashboard()" type="button">
+        📊 Ir al Dashboard
+      </button>
+    </div>
+
+    <div class="error-note">
+      <p>💡 <strong>Sugerencia:</strong> Puedes cancelar tu contrato actual si deseas contratar a otro nutriólogo.</p>
+    </div>
+  </div>
+
+  <!-- ========== ESTADO: ERROR GENERAL ========== -->
+  <div *ngIf="error && !cargando && !esErrorContratoActivo" class="estado-error fade-in">
+    <div class="alert alert-error">
+      <span class="alert-icon">❌</span>
       <div class="alert-content">
         <h3>Hubo un problema</h3>
         <p>{{ error }}</p>

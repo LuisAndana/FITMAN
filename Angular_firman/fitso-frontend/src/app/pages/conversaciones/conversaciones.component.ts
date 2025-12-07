@@ -3,16 +3,28 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { MensajesService, Conversacion } from '../../services/mensajes.service';
+import { IniciarConversacionModalComponent } from '../../pages/iniciar-conversacion/iniciar-conversacion.component';
 
 @Component({
   selector: 'app-conversaciones',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IniciarConversacionModalComponent],
   changeDetection: ChangeDetectionStrategy.Default,
   template: `
+    <!-- MODAL: Iniciar Nueva Conversación -->
+    <app-iniciar-conversacion-modal
+      *ngIf="mostrarModalConversacion"
+      (cerrarModal)="cerrarModal()">
+    </app-iniciar-conversacion-modal>
+
     <div class="conversaciones-container">
       <div class="conversaciones-header">
-        <h2>Mensajes</h2>
+        <div class="header-top">
+          <h2>Mensajes</h2>
+          <button class="btn-nueva-conversacion" (click)="abrirModalConversacion()">
+            ➕ Nueva Conversación
+          </button>
+        </div>
         <p class="subtitle">Tus conversaciones</p>
       </div>
       <div class="conversaciones-list">
@@ -61,7 +73,7 @@ import { MensajesService, Conversacion } from '../../services/mensajes.service';
           <ng-template #noConversaciones>
             <div class="no-conversaciones">
               <p>No tienes conversaciones aún</p>
-              <p class="hint">Inicia una conversación con un nutriólogo o cliente</p>
+              <p class="hint">Haz clic en "➕ Nueva Conversación" para empezar a hablar</p>
             </div>
           </ng-template>
         </ng-container>
@@ -70,39 +82,64 @@ import { MensajesService, Conversacion } from '../../services/mensajes.service';
   `,
   styles: [`
     :host {
-      display: block !important;
-      width: 100% !important;
-      height: 100% !important;
-      background: white !important;
-      z-index: 10000 !important;
-      position: relative !important;
-      overflow: hidden !important;
+      display: block;
+      width: 100%;
+      height: auto;
+      background: white;
     }
 
     .conversaciones-container {
       display: flex;
       flex-direction: column;
-      height: 100%;
       width: 100%;
-      background: white !important;
-      position: relative;
-      z-index: 10000;
+      min-height: calc(100vh - 60px);
+      background: white;
+      overflow: hidden;
     }
 
     .conversaciones-header {
       padding: 20px;
-      background: white !important;
+      background: white;
       border-bottom: 1px solid #eee;
       flex-shrink: 0;
-      position: relative;
-      z-index: 10001;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 5px;
     }
 
     .conversaciones-header h2 {
-      margin: 0 0 5px 0;
+      margin: 0;
       font-size: 24px;
       color: #333;
       font-weight: 600;
+    }
+
+    .btn-nueva-conversacion {
+      background: #ff7a00;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 14px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .btn-nueva-conversacion:hover {
+      background: #e66900;
+      transform: scale(1.05);
+    }
+
+    .btn-nueva-conversacion:active {
+      transform: scale(0.98);
     }
 
     .subtitle {
@@ -114,28 +151,26 @@ import { MensajesService, Conversacion } from '../../services/mensajes.service';
     .conversaciones-list {
       flex: 1;
       overflow-y: auto;
-      background: white !important;
+      background: white;
       width: 100%;
-      position: relative;
-      z-index: 10000;
     }
 
     .conversacion-item {
       display: flex;
       gap: 12px;
       padding: 12px 16px;
-      background: white !important;
+      background: white;
       border-bottom: 1px solid #eee;
       cursor: pointer;
       transition: background 0.2s ease;
     }
 
     .conversacion-item:hover {
-      background: #f9f9f9 !important;
+      background: #f9f9f9;
     }
 
     .conversacion-item.sin-leer {
-      background: #fff8f0 !important;
+      background: #fff8f0;
       border-left: 3px solid #ff7a00;
       padding-left: 13px;
     }
@@ -224,7 +259,7 @@ import { MensajesService, Conversacion } from '../../services/mensajes.service';
       height: 300px;
       color: #999;
       text-align: center;
-      background: white !important;
+      background: white;
     }
 
     .no-conversaciones p {
@@ -233,23 +268,26 @@ import { MensajesService, Conversacion } from '../../services/mensajes.service';
 
     .hint {
       font-size: 12px;
-      color: #bbb !important;
+      color: #bbb;
     }
 
-    /* NUCLEAR: Ocultar CUALQUIER overlay/modal que intente cubrirlo */
-    ::ng-deep .overlay,
-    ::ng-deep .modal,
-    ::ng-deep .backdrop,
-    ::ng-deep .mat-dialog-container,
-    ::ng-deep .mat-dialog-backdrop {
-      display: none !important;
-      z-index: -9999 !important;
-      visibility: hidden !important;
+    @media (max-width: 768px) {
+      .header-top {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .btn-nueva-conversacion {
+        width: 100%;
+        padding: 10px;
+        text-align: center;
+      }
     }
   `]
 })
 export class ConversacionesComponent implements OnInit, OnDestroy {
   conversaciones$!: Observable<Conversacion[]>;
+  mostrarModalConversacion = false;
 
   constructor(
     private mensajesService: MensajesService,
@@ -260,25 +298,14 @@ export class ConversacionesComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // PASO 1: Cerrar TODOS los modales/overlays
-    this.cerrarTodosLosModales();
-    
-    // PASO 2: Forzar recalc del DOM después de 100ms
-    setTimeout(() => {
-      this.cerrarTodosLosModales();
-      this.cdr.detectChanges();
-    }, 100);
-
-    // PASO 3: Cargar conversaciones
     this.mensajesService.cargarConversaciones().subscribe({
       next: () => {
+        console.log('✅ Conversaciones cargadas');
         this.cdr.markForCheck();
-        this.cerrarTodosLosModales();
       },
       error: (err) => {
-        console.error('Error cargando conversaciones:', err);
+        console.error('❌ Error cargando conversaciones:', err);
         this.cdr.markForCheck();
-        this.cerrarTodosLosModales();
       }
     });
   }
@@ -287,48 +314,28 @@ export class ConversacionesComponent implements OnInit, OnDestroy {
     // Limpiar
   }
 
-  private cerrarTodosLosModales(): void {
-    try {
-      // Selectors para buscar overlays
-      const selectors = [
-        '.overlay',
-        '.modal',
-        '.backdrop',
-        '.mat-dialog-container',
-        '.mat-dialog-backdrop',
-        '[class*="overlay"]',
-        '[class*="modal"]',
-        '[class*="backdrop"]'
-      ];
-
-      selectors.forEach(selector => {
-        const elementos = document.querySelectorAll(selector);
-        elementos.forEach((el: Element) => {
-          const html = el as HTMLElement;
-          
-          // Obtener el elemento
-          const parentHeader = el.closest('.site-header');
-          
-          // Si NO está en el header, ocultarlo
-          if (!parentHeader) {
-            html.style.display = 'none !important';
-            html.style.visibility = 'hidden';
-            html.style.zIndex = '-9999';
-            html.style.pointerEvents = 'none';
-          }
-        });
-      });
-
-      // Resetear body overflow
-      document.body.style.overflow = 'auto';
-      
-      console.log('✅ Overlays cerrados correctamente');
-    } catch (e) {
-      console.error('Error cerrando overlays:', e);
-    }
+  /**
+   * 📱 Abrir modal de nueva conversación
+   */
+  abrirModalConversacion(): void {
+    console.log('📱 Abriendo modal de nuevas conversaciones');
+    this.mostrarModalConversacion = true;
   }
 
+  /**
+   * ✖️ Cerrar modal
+   */
+  cerrarModal(): void {
+    console.log('✖️ Cerrando modal desde componente padre');
+    this.mostrarModalConversacion = false;
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * 💬 Abrir una conversación existente
+   */
   abrirConversacion(usuario_id: number): void {
+    console.log(`💬 Abriendo conversación con usuario ${usuario_id}`);
     this.router.navigate(['/chat', usuario_id]);
   }
 }
