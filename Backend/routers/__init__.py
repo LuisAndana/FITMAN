@@ -10,6 +10,7 @@ from . import contratos
 from . import clientes_router as clientes
 from . import catalogo_router
 from . import resenas
+from . import router_mensajes
 
 __all__ = [
     'auth',

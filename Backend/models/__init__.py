@@ -16,6 +16,7 @@ from .logro import Logro
 from .calendario import CalendarioDieta
 from .contrato import Contrato, EstadoContrato
 from .resena import Resena
+from  .mensajes import Mensaje
 
 __all__ = [
     "Usuario",
@@ -32,4 +33,5 @@ __all__ = [
     "Contrato",
     "EstadoContrato",
     "Resena",
+    "mensajes"
 ]

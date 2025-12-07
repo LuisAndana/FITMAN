@@ -8,7 +8,7 @@
       <span></span><span></span><span></span>
     </button>
 
-    <!-- Brand: redirige según tipo (ruta corregida para nutriólogo) -->
+    <!-- Brand -->
     <a class="brand"
        [routerLink]="[ isNutriologo() ? '/nutriologo/dashboard' : '/dashboard' ]">
       ⚡ FitSo
@@ -32,22 +32,78 @@
     <ul class="drawer-list">
       <!-- Opciones para CLIENTE -->
       <ng-container *ngIf="!isNutriologo(); else nutriMenu">
-        <li><a (click)="go('/dashboard')">📊 Dashboard</a></li>
-        <li><a (click)="go('/profile/cliente')">👤 Mi Perfil</a></li>
-        <li><a (click)="go('/progreso')">📈 Mi Progreso</a></li>
-        <li><a (click)="go('/dietas')">🥗 Mis Dietas</a></li>
-        <li><a (click)="go('/nutriologos')">🩺 Nutriólogos</a></li>
+        <li>
+          <a (click)="go('/dashboard')" class="menu-item">
+            <span class="icon" [innerHTML]="getIcon('dashboard')"></span>
+            <span class="label">Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a (click)="go('/profile/cliente')" class="menu-item">
+            <span class="icon" [innerHTML]="getIcon('profile')"></span>
+            <span class="label">Mi Perfil</span>
+          </a>
+        </li>
+        <li>
+          <a (click)="go('/progreso')" class="menu-item">
+            <span class="icon" [innerHTML]="getIcon('progress')"></span>
+            <span class="label">Mi Progreso</span>
+          </a>
+        </li>
+        <li>
+          <a (click)="go('/dietas')" class="menu-item">
+            <span class="icon" [innerHTML]="getIcon('dietas')"></span>
+            <span class="label">Mis Dietas</span>
+          </a>
+        </li>
+        <li>
+          <a (click)="go('/nutriologos')" class="menu-item">
+            <span class="icon" [innerHTML]="getIcon('nutriologos')"></span>
+            <span class="label">Nutriólogos</span>
+          </a>
+        </li>
+        <li class="separator"></li>
+        <li>
+          <a (click)="go('/mensajes')" class="menu-item">
+            <span class="icon" [innerHTML]="getIcon('mensajes')"></span>
+            <span class="label">Mensajes</span>
+          </a>
+        </li>
       </ng-container>
 
       <!-- Opciones para NUTRIÓLOGO -->
       <ng-template #nutriMenu>
-        <li><a (click)="go('/nutriologo/dashboard')">🧪 Dashboard Nutriólogo</a></li>
-        <li><a (click)="go('/profile/nutriologo')">🩺 Perfil (Nutriólogo)</a></li>
-        <li><a (click)="go('/pacientes')">👥 Mis Pacientes</a></li>
+        <li>
+          <a (click)="go('/nutriologo/dashboard')" class="menu-item">
+            <span class="icon" [innerHTML]="getIcon('dashboard')"></span>
+            <span class="label">Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a (click)="go('/profile/nutriologo')" class="menu-item">
+            <span class="icon" [innerHTML]="getIcon('profile')"></span>
+            <span class="label">Mi Perfil</span>
+          </a>
+        </li>
+        <li>
+          <a (click)="go('/pacientes')" class="menu-item">
+            <span class="icon" [innerHTML]="getIcon('pacientes')"></span>
+            <span class="label">Mis Pacientes</span>
+          </a>
+        </li>
+        <li class="separator"></li>
+        <li>
+          <a (click)="go('/mensajes')" class="menu-item">
+            <span class="icon" [innerHTML]="getIcon('mensajes')"></span>
+            <span class="label">Mensajes</span>
+          </a>
+        </li>
       </ng-template>
     </ul>
   </nav>
 
-  <!-- Overlay -->
-  <div class="overlay" *ngIf="menuOpen" (click)="closeMenu()"></div>
+  <!-- Overlay - SOLO SE MUESTRA CUANDO MENÚ ESTÁ ABIERTO -->
+  <div class="overlay" 
+       *ngIf="menuOpen" 
+       (click)="closeMenu()"></div>
 </header>
