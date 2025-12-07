@@ -1,14 +1,13 @@
 """
 Modelo de Reseña/Calificación para Nutriólogos
 Permite que clientes califiquen y comenten sobre su experiencia con un nutriólogo.
-Solo clientes pueden crear reseñas. Las reseñas verificadas tienen un contrato asociado.
+Las Foreign Keys se manejan a nivel de BD (tabla SQL), no en SQLAlchemy.
 """
 
 from sqlalchemy import (
-    Column, Integer, String, Float, DateTime, ForeignKey, Text, Boolean,
+    Column, Integer, String, Float, DateTime, Text, Boolean,
     CheckConstraint, Index, UniqueConstraint
 )
-from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 
@@ -21,9 +20,9 @@ class Resena(Base):
 
     Attributes:
         id_resena: ID único de la reseña (PK)
-        id_cliente: ID del cliente que hace la reseña (FK a usuarios)
-        id_nutriologo: ID del nutriólogo siendo calificado (FK a usuarios)
-        id_contrato: ID del contrato asociado (FK a contratos, opcional)
+        id_cliente: ID del cliente que hace la reseña (INT, no FK en SQLAlchemy)
+        id_nutriologo: ID del nutriólogo siendo calificado (INT, no FK en SQLAlchemy)
+        id_contrato: ID del contrato asociado (INT, nullable)
         calificacion: Puntuación de 1 a 5 estrellas
         titulo: Título corto de la reseña (opcional)
         comentario: Texto completo de la reseña (opcional)
@@ -37,24 +36,26 @@ class Resena(Base):
 
     id_resena = Column(Integer, primary_key=True, index=True, autoincrement=True)
 
-    # Foreign Keys
+    # ✅ CAMBIO CRÍTICO: Sin ForeignKey en SQLAlchemy
+    # Los IDs se guardan como INTEGER simples
+    # Las FK se manejan a nivel de BD (tabla SQL)
     id_cliente = Column(
         Integer,
-        ForeignKey("usuarios.id_usuario", ondelete="CASCADE"),
         nullable=False,
-        index=True
+        index=True,
+        doc="ID del cliente (referencia a usuarios.id_usuario)"
     )
     id_nutriologo = Column(
         Integer,
-        ForeignKey("usuarios.id_usuario", ondelete="CASCADE"),
         nullable=False,
-        index=True
+        index=True,
+        doc="ID del nutriólogo (referencia a usuarios.id_usuario)"
     )
     id_contrato = Column(
         Integer,
-        ForeignKey("contratos.id_contrato", ondelete="SET NULL"),
         nullable=True,
-        index=True
+        index=True,
+        doc="ID del contrato (referencia flexible)"
     )
 
     # ============ DATOS DE CALIFICACIÓN ============
@@ -98,26 +99,6 @@ class Resena(Base):
         nullable=False
     )
 
-    # ============ RELATIONSHIPS ============
-    # Descomentar si tu modelo Usuario soporta relationships bidireccionales
-    # cliente = relationship(
-    #     "Usuario",
-    #     foreign_keys=[id_cliente],
-    #     backref="resenas_como_cliente",
-    #     lazy="joined"
-    # )
-    # nutriologo = relationship(
-    #     "Usuario",
-    #     foreign_keys=[id_nutriologo],
-    #     backref="resenas_recibidas",
-    #     lazy="joined"
-    # )
-    # contrato = relationship(
-    #     "Contrato",
-    #     foreign_keys=[id_contrato],
-    #     lazy="joined"
-    # )
-
     # ============ CONSTRAINTS ============
 
     __table_args__ = (
@@ -131,15 +112,10 @@ class Resena(Base):
             'calificacion >= 1.0 AND calificacion <= 5.0',
             name='check_calificacion_rango'
         ),
-        # Si tiene contrato, debe estar verificado
-        CheckConstraint(
-            'id_contrato IS NULL OR verificado = TRUE',
-            name='check_contrato_verificado'
-        ),
         # Indices compuestos para búsquedas comunes
         Index('idx_nutriologo_verificado', 'id_nutriologo', 'verificado'),
         Index('idx_cliente_nutriologo', 'id_cliente', 'id_nutriologo'),
-        Index('idx_creado_en_desc', 'creado_en'),  # Para ordenar por fecha
+        Index('idx_creado_en_desc', 'creado_en'),
     )
 
     # ============ MÉTODOS ============

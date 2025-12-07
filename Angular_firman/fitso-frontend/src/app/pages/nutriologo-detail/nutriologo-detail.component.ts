@@ -11,7 +11,12 @@ import { ResenaFormComponent } from '../../pages/resenas/resena-form.component';
 @Component({
   standalone: true,
   selector: 'app-nutriologo-detail',
-  imports: [CommonModule, RouterModule, ResenaModalComponent, ResenaFormComponent],
+  imports: [
+    CommonModule, 
+    RouterModule, 
+    ResenaModalComponent,  // ✅ AGREGAR AQUÍ
+    ResenaFormComponent    // ✅ AGREGAR AQUÍ
+  ],
   templateUrl: './nutriologo-detail.component.html',
   styleUrls: ['./nutriologo-detail.component.css']
 })

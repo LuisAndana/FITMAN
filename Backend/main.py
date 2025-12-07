@@ -11,7 +11,7 @@ from fastapi import FastAPI, Request, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
-
+from routers import resenas
 # 🔹 CARGAR VARIABLES DE ENTORNO (IMPORTANTE!)
 load_dotenv()
 
@@ -64,7 +64,8 @@ from config.database import Base, engine
 
 # 🔹 Carga todos los modelos UNA sola vez (evita redefinir tablas)
 import models  # <- usa models/__init__.py
-from routers import users, auth, contratos, clientes, catalogo_router
+from routers import users, auth, contratos, clientes, catalogo_router, resenas
+
 # 🔹 ✅ NUEVO: Verificar que core/deps existe y funciona
 try:
     from core.deps import get_current_user, get_db, create_access_token
@@ -136,6 +137,10 @@ app.include_router(contratos.router, prefix="/api")
 # ✅ catalogo_router: Catálogos (enfermedades, etc.)
 app.include_router(catalogo_router.router)
 
+# ✅ resenas_router: Reseñas y calificaciones de nutriólogos
+# Endpoints: /api/resenas/crear, /api/resenas/nutriologo/{id}, /api/resenas/stats/{id}, etc.
+app.include_router(resenas.router, prefix="/api/resenas")
+
 # ===============================================
 # Puente /nutriologos/validacion → /users/nutriologos/validacion
 # ===============================================
@@ -202,6 +207,7 @@ print("   ✅ /api/auth/* (login, register, validacion)")
 print("   ✅ /api/users/* (me, perfil, nutriologos)")
 print("   ✅ /api/clientes/* (mis-clientes, dietas)")
 print("   ✅ /api/contratos/* (pagos, contratos)")
+print("   ✅ /api/resenas/* (crear, listar, stats)")
 print("=" * 60 + "\n")
 
 # Ejecuta: uvicorn main:app --reload --port 8000

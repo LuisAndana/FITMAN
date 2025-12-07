@@ -109,17 +109,21 @@
   </div>
 </div>
 
+<!-- 🔴 CORRECCIÓN IMPORTANTE:
+     Cambio de selector: app-resenas-modal → app-resena-modal
+     El componente se llama ResenaModalComponent, no ResenaModalComponent
+-->
+
 <!-- Modal: Mostrar Reseñas -->
-<app-resenas-modal
+<app-resena-modal
   [nutriologoId]="data?.id_usuario"
   [isOpen]="showResenas"
-  (close)="closeResenas()">
-</app-resenas-modal>
+  (closed)="closeResenas()">
+</app-resena-modal>
 
 <!-- Modal: Crear Reseña -->
 <app-resena-form
   [nutriologoId]="data?.id_usuario"
-  [isOpen]="showFormResena"
-  (close)="closeFormResena()"
-  (success)="onResenaCreated()">
+  (onSuccess)="onResenaCreated()"
+  (onCancel)="closeFormResena()">
 </app-resena-form>
